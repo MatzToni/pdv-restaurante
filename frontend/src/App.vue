@@ -3,14 +3,16 @@
     <!-- Navbar Superior -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <!-- Logo y Nombre -->
+        <!-- Logo y Nombre del Restaurante -->
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl shadow-sm">
-            🍽️
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="Edén Café Logo" 
+            class="w-11 h-11 object-contain rounded-full shadow-sm hover:scale-105 transition-transform"
+          />
           <div>
-            <h1 class="font-extrabold text-slate-800 text-base leading-tight">PDV Restaurante</h1>
-            <span class="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+            <h1 class="font-black text-slate-800 text-base leading-tight tracking-tight">Edén Café</h1>
+            <span class="text-xs text-eden-600 font-semibold flex items-center gap-1">
               <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sistema en línea
             </span>
           </div>
@@ -29,11 +31,11 @@
           </router-link>
         </nav>
 
-        <!-- Info Usuario / Hora -->
+        <!-- Info Usuario / Turno -->
         <div class="flex items-center gap-3">
           <div class="text-right hidden sm:block">
-            <div class="text-xs font-bold text-slate-700">Turno Matutino</div>
-            <div class="text-xs text-slate-400">Caja #1</div>
+            <div class="text-xs font-bold text-slate-700">Turno Activo</div>
+            <div class="text-xs text-slate-400">Caja Principal</div>
           </div>
         </div>
       </div>
@@ -51,7 +53,7 @@
         :key="item.path"
         :to="item.path"
         class="flex flex-col items-center py-1 px-3 rounded-lg text-xs font-semibold"
-        :class="$route.path === item.path ? 'text-emerald-600 font-bold' : 'text-slate-500'"
+        :class="$route.path === item.path ? 'text-eden-600 font-bold' : 'text-slate-500'"
       >
         <span class="text-lg">{{ item.icono }}</span>
         <span>{{ item.nombre }}</span>

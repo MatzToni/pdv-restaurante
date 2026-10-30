@@ -7,12 +7,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
+        eden: {
+          50: '#f4f7f4',
+          100: '#e5ebe5',
+          200: '#ced9ce',
+          300: '#a9bfa9',
+          400: '#7e9f7e',
+          500: '#5b815b',
+          600: '#486848', // Color principal similar al logo
+          700: '#3a533a',
+          800: '#304330',
+          900: '#283728',
+          950: '#151e15',
         }
       }
     },

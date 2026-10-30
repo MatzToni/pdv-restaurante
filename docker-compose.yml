@@ -17,6 +17,17 @@ services:
       timeout: 5s
       retries: 5
 
+  # Gestor visual de base de datos Web (Adminer)
+  adminer:
+    image: adminer:latest
+    container_name: pdv_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
   backend:
     build:
       context: ./backend
