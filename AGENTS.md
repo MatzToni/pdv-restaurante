@@ -69,8 +69,16 @@ Antes de considerar una tarea o cambio completado:
 ---
 
 ## 📱 6. Convenciones de Negocio (Edén Café)
+* **Roles de Usuario (RBAC):** `administrador`, `gerente`, `jefe`, `cocina`, `mesero`, `auxiliar_general`.
 * **Estados de Mesa:** `libre`, `ocupada`, `cuenta` (por cobrar), `reservada`.
-* **Estados de Comanda:** `en_cola`, `preparando`, `listo`, `entregado`, `pagado`.
+* **Estados de Comanda:** `en_cola`, `preparando`, `listo`, `entregado`, `pagado`, `cancelada`.
+* **Estados de Item de Comanda:** `pendiente`, `preparando`, `listo`, `entregado`, `cancelado`.
+* **Tipos de Inventario:**
+  * `ingrediente`: Carnes, lácteos, frutas, verduras, condimentos (descontable por receta).
+  * `desechable`: Vasos, tapas, popotes, servilletas.
+  * `utensilio`: Platos de vajilla, tazas, cubiertos, coladores, sartenes.
+  * `limpieza`: Escobas, trapeadores, químicos, sanitizantes.
+* **Cancelaciones:** Registrar siempre motivo, usuario que autorizó y bandera `genera_merma` (si el platillo ya se había preparado).
 * **Cortes de Caja:** 
   * *Corte X:* Arqueo parcial durante el turno sin cerrar caja.
   * *Corte Z:* Cierre definitivo del turno con reporte de totales por método de pago (Efectivo, Tarjeta, etc.).
