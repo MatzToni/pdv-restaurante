@@ -43,6 +43,25 @@ export const useMenuStore = defineStore('menu', {
       await api.delete(`/menu/productos/${id}`)
       await this.cargarCatalogo(true)
     },
+    async subirImagen(file) {
+      const formData = new FormData()
+      formData.append('file', file)
+      const { data } = await api.post('/menu/productos/subir-imagen', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      return data
+    },
+    obtenerUrlImagen(imagenUrl) {
+      if (!imagenUrl) return null
+      if (imagenUrl.startsWith('http://') || imagenUrl.startsWith('https://') || imagenUrl.startsWith('data:image/')) {
+        return imagenUrl
+      }
+      const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
+      const rootServer = apiBase.replace(/\/api\/v1\/?$/, '')
+      return `${rootServer}${imagenUrl.startsWith('/') ? '' : '/'}${imagenUrl}`
+    },
     async crearCategoria(catData) {
       const { data } = await api.post('/menu/categorias', catData)
       await this.cargarCatalogo(true)

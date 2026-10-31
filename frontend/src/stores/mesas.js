@@ -42,6 +42,9 @@ export const useMesasStore = defineStore('mesas', {
         this.mesas[idx].estado = data.estado
       }
       return data
+    },
+    async actualizarEstado(mesaId, nuevoEstado) {
+      return this.cambiarEstadoMesa(mesaId, nuevoEstado)
     }
   }
 })

@@ -50,6 +50,10 @@ postgres_data/
 *.sqlite3
 *.db
 
+# Uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
 # OS / IDE
 .DS_Store
 Thumbs.db

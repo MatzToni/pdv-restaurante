@@ -495,7 +495,7 @@
       <main 
         class="flex-1 w-full"
         :class="{ 
-          'max-w-7xl mx-auto p-3 sm:p-4 md:p-6': mostrarNavbarPersonal,
+          'w-full max-w-[1920px] mx-auto p-3 sm:p-5 md:p-6 lg:p-7': mostrarNavbarPersonal,
           '': !mostrarNavbarPersonal 
         }"
       >

@@ -50,7 +50,7 @@
             :key="mesa.id"
             @click="abrirOpcionesMesa(mesa)"
             :class="[
-              'p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between h-32 active:scale-95 shadow-sm',
+              'p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between min-h-[8.5rem] h-auto active:scale-95 shadow-sm',
               mesa.estado === 'libre' ? 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500 hover:shadow-md' :
               mesa.estado === 'ocupada' ? 'border-amber-400 dark:border-amber-600 bg-amber-50/70 dark:bg-amber-950/30 hover:border-amber-500' :
               'border-rose-400 dark:border-rose-600 bg-rose-50/70 dark:bg-rose-950/30 hover:border-rose-500'
@@ -266,11 +266,12 @@ const abrirOpcionesMesa = (mesa) => {
 
 const cambiarEstadoMesa = async (mesa, nuevoEstado) => {
   try {
-    await mesasStore.actualizarEstado(mesa.id, nuevoEstado)
+    await mesasStore.cambiarEstadoMesa(mesa.id, nuevoEstado)
     mesa.estado = nuevoEstado
     modalOpcionesMesa.value = false
   } catch (err) {
-    alert('Error al actualizar estado de la mesa.')
+    console.error('Error al actualizar estado:', err)
+    alert(err.response?.data?.detail || 'Error al actualizar estado de la mesa.')
   }
 }
 
@@ -280,13 +281,14 @@ const solicitarCuentaMesa = async (mesa) => {
     if (ord) {
       await ordenesStore.pedirCuenta(ord.id)
     } else {
-      await mesasStore.actualizarEstado(mesa.id, 'cuenta')
+      await mesasStore.cambiarEstadoMesa(mesa.id, 'cuenta')
     }
     mesa.estado = 'cuenta'
     modalOpcionesMesa.value = false
     alert(`Mesa ${mesa.numero} marcada como 'Por Cobrar'. Ahora visible en Caja.`)
   } catch (err) {
-    alert('Error al solicitar la cuenta.')
+    console.error('Error al solicitar la cuenta:', err)
+    alert(err.response?.data?.detail || 'Error al solicitar la cuenta.')
   }
 }
 

@@ -1,6 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import os
+import shutil
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
+from app.core.config import settings
 from app.db.session import get_db
 from app.models.menu import Categoria, Producto
 from app.models.inventario import Receta
@@ -85,6 +89,29 @@ def listar_productos(
     if categoria_id:
         query = query.filter(Producto.categoria_id == categoria_id)
     return query.order_by(Producto.nombre.asc()).all()
+
+@router.post("/productos/subir-imagen", summary="Subir imagen de platillo, producto o servicio")
+def subir_imagen_producto(file: UploadFile = File(...)):
+    # Validar extensión de imagen
+    extension = os.path.splitext(file.filename)[1].lower() if file.filename else ""
+    if extension not in [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Formato no soportado. Por favor sube un archivo de imagen válido (JPG, PNG, WEBP, GIF, SVG)."
+        )
+
+    os.makedirs(settings.UPLOADS_DIR, exist_ok=True)
+
+    nombre_archivo = f"dish_{uuid.uuid4().hex[:12]}{extension}"
+    ruta_destino = os.path.join(settings.UPLOADS_DIR, nombre_archivo)
+
+    with open(ruta_destino, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return {
+        "url": f"/uploads/{nombre_archivo}",
+        "nombre_archivo": nombre_archivo
+    }
 
 @router.post("/productos", response_model=ProductoOut, status_code=status.HTTP_201_CREATED, summary="Crear un nuevo platillo, producto o servicio")
 def crear_producto(prod_in: ProductoCreate, db: Session = Depends(get_db)):

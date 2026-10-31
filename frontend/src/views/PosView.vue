@@ -43,19 +43,39 @@
           <p class="text-sm">Cargando menú de Edén Café...</p>
         </div>
 
-        <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
           <button
             v-for="item in platillosFiltrados"
             :key="item.id"
             @click="abrirModalExtras(item)"
-            class="flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-eden-50/50 dark:hover:bg-eden-950/30 border border-slate-200 dark:border-slate-800 hover:border-eden-600 dark:hover:border-eden-500 rounded-2xl text-left transition-all active:scale-95 group shadow-sm h-36"
+            class="flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-eden-50/50 dark:hover:bg-eden-950/30 border border-slate-200 dark:border-slate-800 hover:border-eden-600 dark:hover:border-eden-500 rounded-2xl text-left transition-all active:scale-95 group shadow-sm min-h-[9.5rem] h-auto"
           >
-            <div>
-              <div class="font-extrabold text-slate-800 dark:text-slate-100 text-sm group-hover:text-eden-700 dark:group-hover:text-eden-400 leading-snug">{{ item.nombre }}</div>
-              <div class="text-xs text-slate-400 dark:text-slate-500 mt-1 line-clamp-2 leading-relaxed">{{ item.descripcion }}</div>
+            <div class="flex items-start gap-2.5">
+              <!-- Miniatura de imagen si existe -->
+              <div 
+                v-if="item.imagen_url" 
+                class="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 bg-slate-200 dark:bg-slate-800"
+              >
+                <img 
+                  :src="menuStore.obtenerUrlImagen(item.imagen_url)" 
+                  :alt="item.nombre" 
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  @error="$event.target.style.display = 'none'"
+                />
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <div class="font-extrabold text-slate-800 dark:text-slate-100 text-sm group-hover:text-eden-700 dark:group-hover:text-eden-400 leading-snug line-clamp-2">
+                  {{ item.nombre }}
+                </div>
+                <div class="text-xs text-slate-400 dark:text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">
+                  {{ item.descripcion }}
+                </div>
+              </div>
             </div>
-            <div class="mt-2 flex justify-between items-center w-full">
-              <span class="font-black text-eden-600 dark:text-eden-400 text-base">
+
+            <div class="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex justify-between items-center w-full">
+              <span class="font-black text-eden-600 dark:text-eden-400 text-base font-mono">
                 ${{ Number(item.precio).toFixed(2) }}
               </span>
               <span class="text-xs font-bold bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-600 group-hover:bg-eden-600 group-hover:text-white transition">

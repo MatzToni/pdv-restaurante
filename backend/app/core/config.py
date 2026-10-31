@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
 
+    # Directorio de Archivos Estáticos / Subidas
+    UPLOADS_DIR: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "uploads")
+
     class Config:
         case_sensitive = True
 

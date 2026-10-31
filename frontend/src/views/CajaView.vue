@@ -71,7 +71,7 @@
           </div>
           
           <!-- Lista de platillos y extras de la orden -->
-          <div class="space-y-3 max-h-64 overflow-y-auto pr-1 text-sm border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div class="space-y-3 max-h-[36rem] overflow-y-auto pr-1 text-sm border-b border-slate-100 dark:border-slate-800 pb-4">
             <div 
               v-for="item in itemsCobrables" 
               :key="item.id" 

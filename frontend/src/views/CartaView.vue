@@ -141,6 +141,19 @@
             class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3 group"
           >
             <div>
+              <!-- Imagen del Platillo si existe -->
+              <div 
+                v-if="prod.imagen_url" 
+                class="h-44 w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 mb-3"
+              >
+                <img 
+                  :src="menuStore.obtenerUrlImagen(prod.imagen_url)" 
+                  :alt="prod.nombre" 
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                  @error="$event.target.style.display = 'none'"
+                />
+              </div>
+
               <div class="flex justify-between items-start gap-2">
                 <h4 class="font-extrabold text-base text-slate-900 dark:text-slate-100 group-hover:text-eden-600 dark:group-hover:text-eden-400 transition-colors">
                   {{ prod.nombre }}

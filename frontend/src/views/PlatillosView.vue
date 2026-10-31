@@ -87,25 +87,40 @@
       <p class="text-xs text-slate-400 mt-1">Intenta con otro término de búsqueda o agrega un nuevo platillo al menú</p>
     </div>
 
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
       <div 
         v-for="item in productosFiltrados" 
         :key="item.id"
-        class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm flex flex-col justify-between hover:border-eden-500 transition-all space-y-3"
+        class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3.5 shadow-sm flex flex-col justify-between hover:border-eden-500 transition-all space-y-3"
       >
         <div>
-          <!-- Cabecera de la tarjeta con Género y Tipo -->
-          <div class="flex justify-between items-start gap-1">
-            <span class="text-3xs font-extrabold px-2 py-0.5 rounded-md bg-eden-50 dark:bg-eden-950/60 text-eden-800 dark:text-eden-300 border border-eden-200 dark:border-eden-800/40 truncate">
-              {{ item.categoria_nombre || 'General' }}
-            </span>
-            <span class="text-3xs font-bold px-1.5 py-0.5 rounded uppercase" :class="badgeTipoItem(item.tipo_item)">
-              {{ iconoTipoItem(item.tipo_item) }} {{ item.tipo_item || 'platillo' }}
-            </span>
+          <!-- Miniatura o Fotografía del Platillo / Servicio -->
+          <div class="h-36 w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-800 relative group/img mb-2.5">
+            <img 
+              v-if="item.imagen_url"
+              :src="menuStore.obtenerUrlImagen(item.imagen_url)" 
+              :alt="item.nombre"
+              class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
+              @error="$event.target.style.display = 'none'"
+            />
+            <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-600">
+              <span class="text-3xl mb-1">{{ iconoTipoItem(item.tipo_item) }}</span>
+              <span class="text-3xs font-semibold text-slate-400">Sin foto</span>
+            </div>
+
+            <!-- Badges flotantes sobre la imagen -->
+            <div class="absolute top-2 left-2 right-2 flex justify-between items-start pointer-events-none gap-1">
+              <span class="text-3xs font-black px-2 py-0.5 rounded-lg bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 backdrop-blur-md shadow-xs truncate max-w-[120px]">
+                {{ item.categoria_nombre || 'General' }}
+              </span>
+              <span class="text-3xs font-black px-1.5 py-0.5 rounded-lg backdrop-blur-md shadow-xs uppercase shrink-0" :class="badgeTipoItem(item.tipo_item)">
+                {{ iconoTipoItem(item.tipo_item) }} {{ item.tipo_item || 'platillo' }}
+              </span>
+            </div>
           </div>
 
           <!-- Nombre y Descripción -->
-          <h3 class="font-black text-slate-800 dark:text-slate-100 text-sm mt-2 leading-snug">
+          <h3 class="font-black text-slate-800 dark:text-slate-100 text-sm leading-snug line-clamp-2">
             {{ item.nombre }}
           </h3>
           <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 line-clamp-2 leading-relaxed">
@@ -247,6 +262,73 @@
             ></textarea>
           </div>
 
+          <!-- Fotografía o Imagen del Platillo / Servicio -->
+          <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Fotografía o Imagen del Platillo / Servicio
+              </label>
+              <button 
+                v-if="formProducto.imagen_url" 
+                type="button" 
+                @click="quitarImagen"
+                class="text-3xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400"
+              >
+                ✕ Quitar Imagen
+              </button>
+            </div>
+
+            <!-- Vista previa y opciones -->
+            <div class="flex items-center gap-3">
+              <!-- Preview Thumbnail -->
+              <div class="w-20 h-20 rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 shrink-0 flex items-center justify-center relative shadow-xs">
+                <img 
+                  v-if="formProducto.imagen_url" 
+                  :src="menuStore.obtenerUrlImagen(formProducto.imagen_url)" 
+                  alt="Preview" 
+                  class="w-full h-full object-cover"
+                />
+                <div v-else class="text-center p-1 text-slate-300 dark:text-slate-600">
+                  <span class="text-2xl block">📷</span>
+                  <span class="text-3xs font-bold">Sin foto</span>
+                </div>
+                <div v-if="subiendoImagen" class="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center text-white text-xs font-bold">
+                  ⏳
+                </div>
+              </div>
+
+              <!-- Acciones de carga -->
+              <div class="flex-1 space-y-2">
+                <!-- Botón para seleccionar archivo -->
+                <input 
+                  ref="inputArchivo"
+                  type="file" 
+                  accept="image/*" 
+                  @change="manejarSubidaImagen" 
+                  class="hidden" 
+                  id="file-upload-dish"
+                />
+                <label 
+                  for="file-upload-dish"
+                  class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-2xs active:scale-95 transition"
+                >
+                  <span>📁</span>
+                  <span>{{ subiendoImagen ? 'Subiendo imagen...' : 'Cargar foto del dispositivo' }}</span>
+                </label>
+
+                <!-- Input URL alternativa -->
+                <div>
+                  <input 
+                    v-model="formProducto.imagen_url" 
+                    type="text" 
+                    placeholder="O escribe/pega URL: https://... o /uploads/..."
+                    class="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:outline-none focus:border-eden-600 font-mono text-3xs"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Disponibilidad -->
           <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
             <input 
@@ -357,6 +439,8 @@ const filtroTipoItem = ref('')
 const modalProducto = ref(false)
 const editandoId = ref(null)
 const guardando = ref(false)
+const subiendoImagen = ref(false)
+const inputArchivo = ref(null)
 
 const formProducto = ref({
   nombre: '',
@@ -364,6 +448,7 @@ const formProducto = ref({
   tipo_item: 'platillo',
   precio: 0,
   descripcion: '',
+  imagen_url: '',
   requiere_cocina: true,
   disponible: true
 })
@@ -398,9 +483,11 @@ const abrirModalNuevoProducto = () => {
     tipo_item: 'platillo',
     precio: 0,
     descripcion: '',
+    imagen_url: '',
     requiere_cocina: true,
     disponible: true
   }
+  if (inputArchivo.value) inputArchivo.value.value = ''
   modalProducto.value = true
 }
 
@@ -412,10 +499,31 @@ const abrirModalEditar = (item) => {
     tipo_item: item.tipo_item || 'platillo',
     precio: Number(item.precio),
     descripcion: item.descripcion || '',
+    imagen_url: item.imagen_url || '',
     requiere_cocina: item.requiere_cocina ?? true,
     disponible: item.disponible ?? true
   }
+  if (inputArchivo.value) inputArchivo.value.value = ''
   modalProducto.value = true
+}
+
+const manejarSubidaImagen = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  subiendoImagen.value = true
+  try {
+    const res = await menuStore.subirImagen(file)
+    formProducto.value.imagen_url = res.url
+  } catch (err) {
+    alert(err.response?.data?.detail || 'Error al subir la imagen')
+  } finally {
+    subiendoImagen.value = false
+  }
+}
+
+const quitarImagen = () => {
+  formProducto.value.imagen_url = ''
+  if (inputArchivo.value) inputArchivo.value.value = ''
 }
 
 const guardarProducto = async () => {
