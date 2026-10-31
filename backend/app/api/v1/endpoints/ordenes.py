@@ -14,6 +14,7 @@ from app.schemas.orden import (
     OrdenCreate,
     AgregarItemsOrdenRequest,
     CancelarItemRequest,
+    DescartarUnidadItemRequest,
     CancelarOrdenRequest,
     CambiarEstadoItemRequest,
     ReportarObservacionItemRequest,
@@ -255,6 +256,85 @@ def resolver_observacion_item(item_id: int, request: ResolverObservacionItemRequ
     db.commit()
     db.refresh(item)
     return item
+
+@router.post("/items/{item_id}/descartar-unidad", response_model=OrdenOut, summary="Descartar una sola porción o platillo cuando son múltiples iguales")
+def descartar_unidad_item(item_id: int, request: DescartarUnidadItemRequest, db: Session = Depends(get_db)):
+    item = db.query(OrdenItem).filter(OrdenItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item no encontrado.")
+    if item.cantidad <= 1:
+        raise HTTPException(status_code=400, detail="Este item solo tiene 1 porción. Usa cancelar item.")
+
+    orden = item.orden
+
+    # 1. Reducir 1 unidad del item actual
+    item.cantidad -= 1
+
+    # 2. Descontar el precio de 1 unidad del total de la orden
+    orden.subtotal = max(Decimal("0.0"), orden.subtotal - item.precio_unitario)
+    orden.total = max(Decimal("0.0"), orden.total - item.precio_unitario)
+
+    # 3. Registrar insumos devueltos si no genera merma
+    if not request.genera_merma and item.producto:
+        for r in item.producto.receta_items:
+            articulo = r.articulo
+            devolucion = r.cantidad_requerida * 1
+            articulo.stock_actual += devolucion
+            mov = MovimientoInventario(
+                articulo_id=articulo.id,
+                tipo=TipoMovimientoInventario.AJUSTE,
+                cantidad=devolucion,
+                stock_resultante=articulo.stock_actual,
+                motivo=f"Retorno stock por descarte de 1 porción en cocina (Item #{item.id} - {item.producto.nombre})"
+            )
+            db.add(mov)
+
+    # 4. Crear registro del item cancelado para trazabilidad y auditoría
+    item_cancelado = OrdenItem(
+        orden_id=orden.id,
+        producto_id=item.producto_id,
+        cantidad=1,
+        precio_unitario=item.precio_unitario,
+        notas=item.notas,
+        extras=item.extras,
+        estado=EstadoOrdenItem.CANCELADO,
+        motivo_cancelacion=request.motivo or "Descartado 1 unidad en cocina",
+        genera_merma=request.genera_merma
+    )
+    db.add(item_cancelado)
+
+    db.commit()
+    db.refresh(orden)
+    return orden
+
+@router.post("/items/{item_id}/separar", response_model=OrdenOut, summary="Separar platillos múltiples en items individuales de 1 porción")
+def separar_item(item_id: int, db: Session = Depends(get_db)):
+    item = db.query(OrdenItem).filter(OrdenItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item no encontrado.")
+    if item.cantidad <= 1:
+        raise HTTPException(status_code=400, detail="El platillo ya es una sola porción.")
+
+    orden = item.orden
+
+    # Reducir 1 unidad del item original
+    item.cantidad -= 1
+
+    # Crear nuevo item con 1 porción
+    nuevo_item = OrdenItem(
+        orden_id=orden.id,
+        producto_id=item.producto_id,
+        cantidad=1,
+        precio_unitario=item.precio_unitario,
+        notas=item.notas,
+        extras=item.extras,
+        estado=item.estado
+    )
+    db.add(nuevo_item)
+
+    db.commit()
+    db.refresh(orden)
+    return orden
 
 @router.post("/{orden_id}/pedir-cuenta", response_model=OrdenOut, summary="Marcar mesa para cobro de cuenta")
 def pedir_cuenta_orden(orden_id: int, db: Session = Depends(get_db)):

@@ -104,6 +104,25 @@
                       ⚠️ En espera del mesero: "{{ item.observacion_cocina }}"
                     </div>
 
+                    <!-- Si son múltiples platillos iguales: opción para preparar 1 y descartar otro o separarlos -->
+                    <div v-if="item.cantidad > 1 && item.estado !== 'cancelado'" class="flex items-center gap-1.5 py-1 px-2 mt-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-3xs font-bold text-slate-600 dark:text-slate-300">
+                      <span>Múltiples ({{ item.cantidad }}x):</span>
+                      <button 
+                        @click="separarPorcion(item)"
+                        title="Separar en porciones individuales para controlar cada una"
+                        class="px-2 py-0.5 bg-white dark:bg-slate-700 hover:bg-slate-200 border border-slate-300 dark:border-slate-600 rounded text-slate-800 dark:text-slate-100 transition active:scale-95"
+                      >
+                        ✂️ Separar
+                      </button>
+                      <button 
+                        @click="abrirModalDescartarUnidad(item)"
+                        title="Descartar 1 porción y preparar la(s) restante(s)"
+                        class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 rounded transition active:scale-95"
+                      >
+                        ✕ Descartar 1
+                      </button>
+                    </div>
+
                     <span v-if="item.estado === 'cancelado'" class="text-xs text-rose-600 dark:text-rose-400 font-bold block mt-0.5">
                       Cancelado: {{ item.motivo_cancelacion }}
                     </span>
@@ -237,6 +256,58 @@
       </div>
     </div>
 
+    <!-- MODAL DESCARTAR 1 PORCIÓN DE PLATILLOS MÚLTIPLES -->
+    <div v-if="modalDescartarUnidad && itemDescartar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <div class="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+          <span class="text-2xl">🍽️</span>
+          <h3 class="text-lg font-black text-slate-800 dark:text-slate-100">Descartar 1 Porción</h3>
+        </div>
+
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Esta acción descartará 1 porción de <strong>{{ itemDescartar.producto_nombre }}</strong> (quedarán {{ itemDescartar.cantidad - 1 }} por preparar). El importe de 1 porción se descontará automáticamente de la cuenta de la mesa.
+        </p>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Motivo de descarte</label>
+            <input 
+              v-model="formDescartar.motivo" 
+              type="text" 
+              placeholder="Ej. Insumo suficiente solo para 1 platillo" 
+              class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-rose-500"
+            />
+          </div>
+
+          <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
+            <input 
+              v-model="formDescartar.genera_merma" 
+              type="checkbox" 
+              class="rounded text-rose-600 focus:ring-rose-500 w-4 h-4"
+            />
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
+              ¿Genera Merma? (El insumo se desperdició)
+            </span>
+          </label>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button 
+            @click="modalDescartarUnidad = false"
+            class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
+          >
+            Volver
+          </button>
+          <button 
+            @click="confirmarDescartarUnidad"
+            class="px-5 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-sm transition active:scale-95"
+          >
+            Confirmar Descarte
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Cancelar Platillo con PIN y Merma -->
     <div v-if="modalCancelar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
@@ -331,6 +402,14 @@ const formCancelar = ref({
   genera_merma: false
 })
 
+// Modal Descartar 1 Porción
+const modalDescartarUnidad = ref(false)
+const itemDescartar = ref(null)
+const formDescartar = ref({
+  motivo: 'Insumo suficiente solo para 1 platillo',
+  genera_merma: false
+})
+
 onMounted(() => {
   ordenesStore.cargarOrdenesActivas()
   timer = setInterval(() => {
@@ -388,6 +467,35 @@ const confirmarCancelacion = async () => {
     alert('Platillo cancelado correctamente.')
   } catch (err) {
     alert(err.response?.data?.detail || 'Error al autorizar cancelación.')
+  }
+}
+
+const separarPorcion = async (item) => {
+  try {
+    await ordenesStore.separarItem(item.id)
+    alert(`Porciones de ${item.producto_nombre} separadas exitosamente en cocina.`)
+  } catch (err) {
+    alert('Error al separar porciones.')
+  }
+}
+
+const abrirModalDescartarUnidad = (item) => {
+  itemDescartar.value = item
+  formDescartar.value = { motivo: 'Insumo suficiente solo para 1 platillo', genera_merma: false }
+  modalDescartarUnidad.value = true
+}
+
+const confirmarDescartarUnidad = async () => {
+  if (!itemDescartar.value) return
+  try {
+    await ordenesStore.descartarUnidadItem(itemDescartar.value.id, {
+      motivo: formDescartar.value.motivo,
+      genera_merma: formDescartar.value.genera_merma
+    })
+    modalDescartarUnidad.value = false
+    alert(`Se descartó 1 porción de "${itemDescartar.value.producto_nombre}". La comanda y la cuenta fueron ajustadas.`)
+  } catch (err) {
+    alert('Error al descartar la porción.')
   }
 }
 

@@ -8,12 +8,12 @@ export const useMenuStore = defineStore('menu', {
     cargando: false
   }),
   actions: {
-    async cargarCatalogo() {
+    async cargarCatalogo(incluirInactivos = false) {
       this.cargando = true
       try {
         const [resCat, resProd] = await Promise.all([
           api.get('/menu/categorias'),
-          api.get('/menu/productos')
+          api.get(`/menu/productos?incluir_inactivos=${incluirInactivos}`)
         ])
         this.categorias = resCat.data
         this.productos = resProd.data
@@ -25,13 +25,37 @@ export const useMenuStore = defineStore('menu', {
     },
     async crearProducto(prodData) {
       const { data } = await api.post('/menu/productos', prodData)
-      this.productos.push(data)
+      await this.cargarCatalogo(true)
       return data
+    },
+    async actualizarProducto(id, prodData) {
+      const { data } = await api.put(`/menu/productos/${id}`, prodData)
+      await this.cargarCatalogo(true)
+      return data
+    },
+    async alternarDisponibilidad(id) {
+      const { data } = await api.patch(`/menu/productos/${id}/disponibilidad`)
+      const prod = this.productos.find(p => p.id === id)
+      if (prod) prod.disponible = data.disponible
+      return data
+    },
+    async eliminarProducto(id) {
+      await api.delete(`/menu/productos/${id}`)
+      await this.cargarCatalogo(true)
     },
     async crearCategoria(catData) {
       const { data } = await api.post('/menu/categorias', catData)
-      this.categorias.push(data)
+      await this.cargarCatalogo(true)
       return data
+    },
+    async actualizarCategoria(id, catData) {
+      const { data } = await api.put(`/menu/categorias/${id}`, catData)
+      await this.cargarCatalogo(true)
+      return data
+    },
+    async eliminarCategoria(id) {
+      await api.delete(`/menu/categorias/${id}`)
+      await this.cargarCatalogo(true)
     }
   }
 })

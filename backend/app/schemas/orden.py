@@ -35,6 +35,10 @@ class CancelarItemRequest(BaseModel):
     motivo: str
     genera_merma: bool = False
 
+class DescartarUnidadItemRequest(BaseModel):
+    motivo: Optional[str] = "Descartada 1 porción en cocina"
+    genera_merma: bool = False
+
 class ReportarObservacionItemRequest(BaseModel):
     observacion: str
 

@@ -156,6 +156,7 @@ const todosLosNavItems = [
   { nombre: 'Comandero', nombreRuta: 'pos', path: '/pos', icono: '📝' },
   { nombre: 'Cocina KDS', nombreRuta: 'cocina', path: '/cocina', icono: '👨‍🍳' },
   { nombre: 'Caja', nombreRuta: 'caja', path: '/caja', icono: '💵' },
+  { nombre: 'Menú / Platillos', nombreRuta: 'platillos', path: '/platillos', icono: '🍽️' },
   { nombre: 'Inventario', nombreRuta: 'inventario', path: '/inventario', icono: '📦' },
   { nombre: 'Personal', nombreRuta: 'usuarios', path: '/usuarios', icono: '👥' },
 ]

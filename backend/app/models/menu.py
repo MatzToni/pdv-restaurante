@@ -19,6 +19,7 @@ class Producto(Base):
     id = Column(Integer, primary_key=True, index=True)
     categoria_id = Column(Integer, ForeignKey("categorias.id"), nullable=False)
     nombre = Column(String(100), nullable=False)
+    tipo_item = Column(String(30), default="platillo", nullable=True) # platillo, bebida, producto, servicio
     descripcion = Column(Text, nullable=True)
     precio = Column(Numeric(10, 2), nullable=False)
     imagen_url = Column(String(255), nullable=True)
@@ -27,3 +28,7 @@ class Producto(Base):
 
     categoria = relationship("Categoria", back_populates="productos")
     receta_items = relationship("Receta", back_populates="producto", cascade="all, delete-orphan")
+
+    @property
+    def categoria_nombre(self) -> str:
+        return self.categoria.nombre if self.categoria else ""

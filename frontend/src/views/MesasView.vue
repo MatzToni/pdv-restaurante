@@ -48,7 +48,7 @@
           <div 
             v-for="mesa in area.mesas" 
             :key="mesa.id"
-            @click="abrirComandero(mesa)"
+            @click="abrirOpcionesMesa(mesa)"
             :class="[
               'p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between h-32 active:scale-95 shadow-sm',
               mesa.estado === 'libre' ? 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500 hover:shadow-md' :
@@ -149,6 +149,85 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Opciones de Mesa (Ciclo de Vida: Libre -> Ocupada -> Por Cobrar -> Libre) -->
+    <div v-if="modalOpcionesMesa && mesaSeleccionada" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <div class="flex justify-between items-start border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div>
+            <h3 class="text-xl font-black text-slate-800 dark:text-slate-100">{{ mesaSeleccionada.numero }}</h3>
+            <span class="text-xs text-slate-400">Capacidad: {{ mesaSeleccionada.capacidad }} personas</span>
+          </div>
+          <span 
+            :class="[
+              'text-xs font-black px-2.5 py-1 rounded-full uppercase',
+              mesaSeleccionada.estado === 'libre' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' :
+              mesaSeleccionada.estado === 'ocupada' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300' :
+              'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
+            ]"
+          >
+            {{ mesaSeleccionada.estado === 'cuenta' ? 'Por cobrar' : mesaSeleccionada.estado }}
+          </span>
+        </div>
+
+        <!-- Acciones Principales -->
+        <div class="space-y-2">
+          <!-- Abrir Comandero -->
+          <button 
+            @click="abrirComandero(mesaSeleccionada)"
+            class="w-full py-3 bg-eden-600 hover:bg-eden-700 text-white rounded-xl font-black text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-2"
+          >
+            <span>📝</span>
+            <span>{{ mesaSeleccionada.estado === 'libre' ? 'Tomar Orden (Comandero)' : 'Ver / Agregar Rondas' }}</span>
+          </button>
+
+          <!-- Si está libre: opción de ocupar mesa directamente -->
+          <button 
+            v-if="mesaSeleccionada.estado === 'libre'"
+            @click="cambiarEstadoMesa(mesaSeleccionada, 'ocupada')"
+            class="w-full py-2.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+          >
+            <span>👤</span> Ocupar Mesa (Comensales Sentados)
+          </button>
+
+          <!-- Si está ocupada: opción de pedir cuenta o liberar -->
+          <button 
+            v-if="mesaSeleccionada.estado === 'ocupada'"
+            @click="solicitarCuentaMesa(mesaSeleccionada)"
+            class="w-full py-2.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+          >
+            <span>🧾</span> Solicitar Cuenta (Pasar a Por Cobrar)
+          </button>
+
+          <!-- Si está en cuenta: ir a caja -->
+          <button 
+            v-if="mesaSeleccionada.estado === 'cuenta'"
+            @click="router.push('/caja')"
+            class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5"
+          >
+            <span>💵</span> Ir a Caja para Cobrar
+          </button>
+
+          <!-- Liberar mesa si ya no está libre -->
+          <button 
+            v-if="mesaSeleccionada.estado !== 'libre'"
+            @click="cambiarEstadoMesa(mesaSeleccionada, 'libre')"
+            class="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+          >
+            <span>🟢</span> Marcar como Libre / Limpia
+          </button>
+        </div>
+
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+          <button 
+            @click="modalOpcionesMesa = false" 
+            class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -165,6 +244,9 @@ const ordenesStore = useOrdenesStore()
 const authStore = useAuthStore()
 
 const modalNuevaMesa = ref(false)
+const modalOpcionesMesa = ref(false)
+const mesaSeleccionada = ref(null)
+
 const formMesa = ref({
   numero: '',
   area_id: 1,
@@ -176,6 +258,37 @@ onMounted(() => {
   mesasStore.cargarMesas()
   ordenesStore.cargarOrdenesActivas()
 })
+
+const abrirOpcionesMesa = (mesa) => {
+  mesaSeleccionada.value = mesa
+  modalOpcionesMesa.value = true
+}
+
+const cambiarEstadoMesa = async (mesa, nuevoEstado) => {
+  try {
+    await mesasStore.actualizarEstado(mesa.id, nuevoEstado)
+    mesa.estado = nuevoEstado
+    modalOpcionesMesa.value = false
+  } catch (err) {
+    alert('Error al actualizar estado de la mesa.')
+  }
+}
+
+const solicitarCuentaMesa = async (mesa) => {
+  try {
+    const ord = ordenesStore.ordenesActivas.find(o => o.mesa_id === mesa.id && o.estado !== 'pagado')
+    if (ord) {
+      await ordenesStore.pedirCuenta(ord.id)
+    } else {
+      await mesasStore.actualizarEstado(mesa.id, 'cuenta')
+    }
+    mesa.estado = 'cuenta'
+    modalOpcionesMesa.value = false
+    alert(`Mesa ${mesa.numero} marcada como 'Por Cobrar'. Ahora visible en Caja.`)
+  } catch (err) {
+    alert('Error al solicitar la cuenta.')
+  }
+}
 
 const getAlertaMesa = (mesaId) => {
   const ord = ordenesStore.ordenesActivas.find(o => o.mesa_id === mesaId && o.estado !== 'pagado' && o.estado !== 'cancelada')

@@ -10,6 +10,12 @@ class CategoriaBase(BaseModel):
 class CategoriaCreate(CategoriaBase):
     pass
 
+class CategoriaUpdate(BaseModel):
+    nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    orden: Optional[int] = None
+    activo: Optional[bool] = None
+
 class CategoriaOut(CategoriaBase):
     id: int
     activo: bool
@@ -32,6 +38,7 @@ class RecetaItemOut(BaseModel):
 class ProductoBase(BaseModel):
     categoria_id: int
     nombre: str
+    tipo_item: Optional[str] = "platillo" # platillo, bebida, producto, servicio
     descripcion: Optional[str] = None
     precio: Decimal
     disponible: bool = True
@@ -41,8 +48,19 @@ class ProductoBase(BaseModel):
 class ProductoCreate(ProductoBase):
     receta: Optional[List[RecetaItemCreate]] = []
 
+class ProductoUpdate(BaseModel):
+    categoria_id: Optional[int] = None
+    nombre: Optional[str] = None
+    tipo_item: Optional[str] = None
+    descripcion: Optional[str] = None
+    precio: Optional[Decimal] = None
+    disponible: Optional[bool] = None
+    requiere_cocina: Optional[bool] = None
+    imagen_url: Optional[str] = None
+
 class ProductoOut(ProductoBase):
     id: int
+    categoria_nombre: Optional[str] = None
     receta_items: Optional[List[RecetaItemOut]] = []
 
     class Config:

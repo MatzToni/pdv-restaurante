@@ -60,6 +60,19 @@ export const useOrdenesStore = defineStore('ordenes', {
       await this.cargarOrdenesActivas()
       return data
     },
+    async descartarUnidadItem(itemId, { motivo, genera_merma }) {
+      const { data } = await api.post(`/ordenes/items/${itemId}/descartar-unidad`, {
+        motivo,
+        genera_merma
+      })
+      await this.cargarOrdenesActivas()
+      return data
+    },
+    async separarItem(itemId) {
+      const { data } = await api.post(`/ordenes/items/${itemId}/separar`)
+      await this.cargarOrdenesActivas()
+      return data
+    },
     async cancelarItem(itemId, { pin_autorizacion, motivo, genera_merma }) {
       const { data } = await api.post(`/ordenes/items/${itemId}/cancelar`, {
         pin_autorizacion,
