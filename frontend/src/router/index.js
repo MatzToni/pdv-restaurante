@@ -3,6 +3,8 @@ import MesasView from '../views/MesasView.vue'
 import PosView from '../views/PosView.vue'
 import CocinaView from '../views/CocinaView.vue'
 import CajaView from '../views/CajaView.vue'
+import InventarioView from '../views/InventarioView.vue'
+import UsuariosView from '../views/UsuariosView.vue'
 
 const routes = [
   {
@@ -15,7 +17,7 @@ const routes = [
     path: '/pos',
     name: 'pos',
     component: PosView,
-    meta: { title: 'Toma de Pedidos' }
+    meta: { title: 'Comandero Móvil' }
   },
   {
     path: '/cocina',
@@ -27,7 +29,19 @@ const routes = [
     path: '/caja',
     name: 'caja',
     component: CajaView,
-    meta: { title: 'Caja y Cobro' }
+    meta: { title: 'Caja y Cobros' }
+  },
+  {
+    path: '/inventario',
+    name: 'inventario',
+    component: InventarioView,
+    meta: { title: 'Inventario y Almacén' }
+  },
+  {
+    path: '/usuarios',
+    name: 'usuarios',
+    component: UsuariosView,
+    meta: { title: 'Personal y Roles' }
   }
 ]
 
