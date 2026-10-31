@@ -151,6 +151,13 @@
           </button>
         </div>
       </div>
+
+      <!-- Enlace Público a la Carta para Clientes -->
+      <div class="text-center pt-2">
+        <router-link to="/carta" class="text-xs font-extrabold text-eden-600 dark:text-eden-400 hover:underline inline-flex items-center gap-1.5">
+          <span>📖</span> Ver Menú Digital para Clientes →
+        </router-link>
+      </div>
     </div>
   </div>
 </template>

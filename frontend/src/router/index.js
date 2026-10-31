@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore, RUTA_INICIAL_POR_ROL } from '../stores/auth'
 import LoginView from '../views/LoginView.vue'
+import CartaView from '../views/CartaView.vue'
 import MesasView from '../views/MesasView.vue'
 import PosView from '../views/PosView.vue'
 import CocinaView from '../views/CocinaView.vue'
@@ -14,6 +15,12 @@ const routes = [
     name: 'login',
     component: LoginView,
     meta: { publico: true, title: 'Acceso - Edén Café' }
+  },
+  {
+    path: '/carta',
+    name: 'carta',
+    component: CartaView,
+    meta: { publico: true, title: 'Menú Digital — Edén Café' }
   },
   {
     path: '/',
@@ -84,9 +91,9 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 
-  // 1. Si la ruta es pública (login)
+  // 1. Si la ruta es pública (login o carta para clientes)
   if (to.meta.publico) {
-    if (authStore.estaAutenticado) {
+    if (to.name === 'login' && authStore.estaAutenticado) {
       const rutaDefecto = RUTA_INICIAL_POR_ROL[authStore.usuarioActual.rol] || '/'
       return next(rutaDefecto)
     }
@@ -101,7 +108,6 @@ router.beforeEach((to, from, next) => {
   // 3. Validar si el rol del usuario tiene permiso para entrar a esta ruta
   const rol = authStore.usuarioActual.rol
   if (to.meta.roles && !to.meta.roles.includes(rol)) {
-    // Si no tiene permiso, lo enviamos a su pantalla por defecto
     const rutaPermitida = RUTA_INICIAL_POR_ROL[rol] || '/'
     return next(rutaPermitida)
   }
