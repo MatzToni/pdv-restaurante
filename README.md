@@ -81,8 +81,52 @@ npm run dev
 
 ---
 
-## 📱 Acceso desde Tablets y Celulares en Red Local
+## 📱 Acceso desde Tablets (iPad) y Celulares en Red Local (LAN)
 
-Para que los meseros tomen pedidos desde sus teléfonos/tablets en la misma red Wi-Fi:
-1. Averigua la dirección IP local de la computadora servidora (ejemplo: `192.168.1.50`).
-2. Desde el navegador del teléfono, ingresa a: `http://192.168.1.50:5173`.
+El sistema está optimizado para su uso en computadoras fijas en caja y dispositivos móviles (tablets iPad/Android o teléfonos inteligentes) para meseros y pantallas de cocina KDS dentro de la misma red local (Wi-Fi o cable Ethernet).
+
+### 🚀 Conexión Rápida (Entorno Windows con WSL2)
+
+Cuando el servidor corre sobre Windows con Docker en WSL2, Windows aísla internamente los puertos del sistema virtual. Para permitir que dispositivos externos (como un iPad) se conecten:
+
+1. **Ejecutar el script de habilitación (1 Clic):**
+   * En Windows, haz doble clic en `scripts/habilitar_lan.bat` (o el acceso directo en el Escritorio: `Habilitar_iPad_PDV.bat`).
+   * El script solicita permisos de Administrador y automáticamente:
+     * Detecta la IP interna actual de WSL2 (`wsl hostname -I`).
+     * Reenvía los puertos `5173` (Frontend) y `8000` (Backend API).
+     * Abre las reglas de entrada correspondientes en el Firewall de Windows.
+     * Muestra la dirección IP local a la que debes ingresar.
+
+2. **Abrir en tu iPad o Tablet:**
+   * Conecta tu iPad a la misma red Wi-Fi del módem/router.
+   * Abre Safari o Chrome e ingresa a:
+     ```text
+     http://<IP_DE_TU_PC>:5173
+     ```
+     *(Ejemplo: `http://192.168.1.98:5173`)*
+
+3. **Experiencia de App Nativa a Pantalla Completa en iPad:**
+   * En Safari, presiona el botón **Compartir** (icono de cuadrado con flecha hacia arriba) y selecciona **"Agregar a pantalla de inicio"**.
+   * Se creará un acceso directo con el icono de Edén Café que abrirá el comandero a pantalla completa sin barra de navegación del navegador.
+
+---
+
+## 👥 Cuentas de Demostración y Roles Preconfigurados
+
+| Colaborador | Rol | PIN de Acceso | Vistas Permitidas |
+| :--- | :---: | :---: | :--- |
+| **Carlos López** | `mesero` | **`7777`** | Mesas, Comandero Táctil |
+| **Ana Gómez** | `mesero` | **`5556`** | Mesas, Comandero Táctil |
+| **Chef Roberto Martínez** | `cocina` | **`4444`** | Pantalla Cocina y Barra (KDS) |
+| **Valeria Mendoza** | `gerente` | **`2222`** | Todos los módulos + Cortes de Caja |
+| **Administrador Edén** | `administrador` | **`1111`** | Control Total del Sistema |
+
+---
+
+## 📖 Carta Digital Pública para Clientes
+
+Los clientes pueden consultar el menú y platillos con fotos y precios escaneando el código QR de su mesa o accediendo directamente a:
+```text
+http://<IP_DE_TU_PC>:5173/carta
+```
+*(Esta vista pública es independiente y no requiere inicio de sesión de personal).*
