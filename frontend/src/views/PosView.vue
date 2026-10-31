@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100vh-5.5rem)] flex flex-col lg:flex-row gap-4">
+  <div class="h-[calc(100vh-5.5rem)] md:h-[calc(100vh-3rem)] flex flex-col lg:flex-row gap-4">
     <!-- Menú y Selección de Platillos (Izquierda) -->
     <div class="flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm transition-colors">
       <!-- Barra superior con regreso y categorías -->
