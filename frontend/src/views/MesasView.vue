@@ -1,26 +1,27 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
       <div>
-        <h1 class="text-2xl font-black text-slate-800 tracking-tight">Mapa de Mesas</h1>
-        <p class="text-slate-500 text-sm">Gestiona el estado de las mesas y salones en tiempo real</p>
+        <h1 class="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Mapa de Mesas</h1>
+        <p class="text-slate-500 dark:text-slate-400 text-sm">Gestiona el estado de las mesas y salones en tiempo real</p>
       </div>
 
       <div class="flex flex-wrap items-center gap-3">
         <!-- Indicadores -->
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
           <span class="w-2 h-2 rounded-full bg-emerald-500"></span> {{ mesasStore.mesasLibres.length }} Libres
         </span>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">
           <span class="w-2 h-2 rounded-full bg-amber-500"></span> {{ mesasStore.mesasOcupadas.length }} Ocupadas
         </span>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40">
           <span class="w-2 h-2 rounded-full bg-rose-500"></span> {{ mesasStore.mesasCuenta.length }} Por Cobrar
         </span>
 
-        <!-- Botón crear mesa -->
+        <!-- Botón crear mesa (solo visible para admin/gerente/jefe) -->
         <button 
+          v-if="['administrador', 'gerente', 'jefe'].includes(authStore.rolActual)"
           @click="modalNuevaMesa = true"
           class="px-3.5 py-1.5 bg-eden-600 hover:bg-eden-700 text-white rounded-xl text-xs font-bold shadow-sm transition active:scale-95"
         >
@@ -31,16 +32,16 @@
 
     <!-- Spinner de carga -->
     <div v-if="mesasStore.cargando" class="text-center py-16 text-slate-400">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-eden-600 mb-2"></div>
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 dark:border-slate-800 border-t-eden-600 mb-2"></div>
       <p class="text-sm">Cargando mesas desde el servidor...</p>
     </div>
 
     <!-- Grid de Mesas por Área -->
     <div v-else class="space-y-8">
       <div v-for="area in mesasPorArea" :key="area.id" class="space-y-3">
-        <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+        <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
           <span>📍</span> {{ area.nombre }}
-          <span class="text-xs bg-slate-200 text-slate-700 font-bold px-2 py-0.5 rounded-full">{{ area.mesas.length }}</span>
+          <span class="text-xs bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2 py-0.5 rounded-full">{{ area.mesas.length }}</span>
         </h2>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
@@ -50,13 +51,13 @@
             @click="abrirComandero(mesa)"
             :class="[
               'p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between h-32 active:scale-95 shadow-sm',
-              mesa.estado === 'libre' ? 'border-slate-200 bg-white hover:border-emerald-500 hover:shadow-md' :
-              mesa.estado === 'ocupada' ? 'border-amber-400 bg-amber-50/70 hover:border-amber-500' :
-              'border-rose-400 bg-rose-50/70 hover:border-rose-500'
+              mesa.estado === 'libre' ? 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500 hover:shadow-md' :
+              mesa.estado === 'ocupada' ? 'border-amber-400 dark:border-amber-600 bg-amber-50/70 dark:bg-amber-950/30 hover:border-amber-500' :
+              'border-rose-400 dark:border-rose-600 bg-rose-50/70 dark:bg-rose-950/30 hover:border-rose-500'
             ]"
           >
             <div class="flex justify-between items-start">
-              <span class="font-bold text-base text-slate-800">{{ mesa.numero }}</span>
+              <span class="font-bold text-base text-slate-800 dark:text-slate-100">{{ mesa.numero }}</span>
               <span 
                 :class="[
                   'w-3 h-3 rounded-full',
@@ -66,14 +67,14 @@
               ></span>
             </div>
 
-            <div class="text-xs text-slate-500 font-medium">
+            <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">
               <span>Capacidad: {{ mesa.capacidad }} pers.</span>
             </div>
 
             <div class="text-xs font-bold capitalize flex justify-between items-center" :class="{
-              'text-emerald-600': mesa.estado === 'libre',
-              'text-amber-600': mesa.estado === 'ocupada',
-              'text-rose-600': mesa.estado === 'cuenta'
+              'text-emerald-600 dark:text-emerald-400': mesa.estado === 'libre',
+              'text-amber-600 dark:text-amber-400': mesa.estado === 'ocupada',
+              'text-rose-600 dark:text-rose-400': mesa.estado === 'cuenta'
             }">
               <span>{{ mesa.estado === 'cuenta' ? 'Por cobrar' : mesa.estado }}</span>
               <span class="text-slate-400 font-normal">→</span>
@@ -84,26 +85,26 @@
     </div>
 
     <!-- Modal para Crear Nueva Mesa -->
-    <div v-if="modalNuevaMesa" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 space-y-4">
-        <h3 class="text-lg font-black text-slate-800">Agregar Nueva Mesa</h3>
+    <div v-if="modalNuevaMesa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <h3 class="text-lg font-black text-slate-800 dark:text-slate-100">Agregar Nueva Mesa</h3>
         
         <div class="space-y-3">
           <div>
-            <label class="text-xs font-bold text-slate-600">Nombre / Denominación</label>
+            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Nombre / Denominación</label>
             <input 
               v-model="formMesa.numero" 
               type="text" 
               placeholder="Ej. Mesa 7, Terraza 5" 
-              class="w-full mt-1 p-2.5 border border-slate-300 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
+              class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
             />
           </div>
 
           <div>
-            <label class="text-xs font-bold text-slate-600">Área / Salón</label>
+            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Área / Salón</label>
             <select 
               v-model.number="formMesa.area_id" 
-              class="w-full mt-1 p-2.5 border border-slate-300 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
+              class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
             >
               <option v-for="area in mesasStore.areas" :key="area.id" :value="area.id">
                 {{ area.nombre }}
@@ -112,12 +113,12 @@
           </div>
 
           <div>
-            <label class="text-xs font-bold text-slate-600">Capacidad (Personas)</label>
+            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Capacidad (Personas)</label>
             <input 
               v-model.number="formMesa.capacidad" 
               type="number" 
               min="1" 
-              class="w-full mt-1 p-2.5 border border-slate-300 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
+              class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
             />
           </div>
         </div>
@@ -125,7 +126,7 @@
         <div class="flex gap-2 pt-2">
           <button 
             @click="modalNuevaMesa = false" 
-            class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition"
+            class="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-sm transition"
           >
             Cancelar
           </button>
@@ -146,9 +147,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMesasStore } from '../stores/mesas'
+import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
 const mesasStore = useMesasStore()
+const authStore = useAuthStore()
 
 const modalNuevaMesa = ref(false)
 const formMesa = ref({

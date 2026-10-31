@@ -1,16 +1,16 @@
 <template>
   <div class="h-[calc(100vh-5.5rem)] flex flex-col lg:flex-row gap-4">
     <!-- Menú y Selección de Platillos (Izquierda) -->
-    <div class="flex-1 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+    <div class="flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm transition-colors">
       <!-- Selector de Categorías -->
-      <div class="p-3 border-b border-slate-100 flex gap-2 overflow-x-auto no-scrollbar bg-slate-50/50">
+      <div class="p-3 border-b border-slate-100 dark:border-slate-800 flex gap-2 overflow-x-auto no-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
         <button
           @click="categoriaSeleccionada = null"
           :class="[
             'px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0',
             categoriaSeleccionada === null 
-              ? 'bg-slate-900 text-white shadow-sm' 
-              : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm' 
+              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
           ]"
         >
           Todos los Platillos
@@ -23,7 +23,7 @@
             'px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0',
             categoriaSeleccionada === cat.id 
               ? 'bg-eden-600 text-white shadow-sm' 
-              : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
           ]"
         >
           {{ cat.nombre }}
@@ -41,17 +41,17 @@
             v-for="item in platillosFiltrados"
             :key="item.id"
             @click="agregarAlPedido(item)"
-            class="flex flex-col justify-between p-3.5 bg-slate-50 hover:bg-eden-50/50 border border-slate-200 hover:border-eden-600 rounded-2xl text-left transition-all active:scale-95 group shadow-sm h-36"
+            class="flex flex-col justify-between p-3.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-eden-50/50 dark:hover:bg-eden-950/30 border border-slate-200 dark:border-slate-800 hover:border-eden-600 dark:hover:border-eden-500 rounded-2xl text-left transition-all active:scale-95 group shadow-sm h-36"
           >
             <div>
-              <div class="font-extrabold text-slate-800 text-sm group-hover:text-eden-700 leading-snug">{{ item.nombre }}</div>
-              <div class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">{{ item.descripcion }}</div>
+              <div class="font-extrabold text-slate-800 dark:text-slate-100 text-sm group-hover:text-eden-700 dark:group-hover:text-eden-400 leading-snug">{{ item.nombre }}</div>
+              <div class="text-xs text-slate-400 dark:text-slate-500 mt-1 line-clamp-2 leading-relaxed">{{ item.descripcion }}</div>
             </div>
             <div class="mt-2 flex justify-between items-center w-full">
-              <span class="font-black text-eden-600 text-base">
+              <span class="font-black text-eden-600 dark:text-eden-400 text-base">
                 ${{ Number(item.precio).toFixed(2) }}
               </span>
-              <span class="text-xs font-bold bg-white px-2 py-0.5 rounded-lg border border-slate-200 group-hover:bg-eden-600 group-hover:text-white transition">
+              <span class="text-xs font-bold bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-600 group-hover:bg-eden-600 group-hover:text-white transition">
                 + Agregar
               </span>
             </div>
@@ -61,16 +61,16 @@
     </div>
 
     <!-- Comanda / Ticket Actual (Derecha) -->
-    <div class="w-full lg:w-96 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-      <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+    <div class="w-full lg:w-96 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm transition-colors">
+      <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
         <div>
-          <h2 class="font-extrabold text-slate-800 text-base">Comanda: {{ mesaNumero }}</h2>
-          <span class="text-xs text-slate-500 font-medium">Mesero: {{ authStore.usuarioActual.nombre }}</span>
+          <h2 class="font-extrabold text-slate-800 dark:text-slate-100 text-base">Comanda: {{ mesaNumero }}</h2>
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Mesero: {{ authStore.usuarioActual?.nombre }}</span>
         </div>
         <button 
           v-if="itemsComanda.length > 0"
           @click="itemsComanda = []" 
-          class="text-xs font-bold text-rose-500 hover:underline"
+          class="text-xs font-bold text-rose-500 dark:text-rose-400 hover:underline"
         >
           Limpiar
         </button>
@@ -81,24 +81,24 @@
         <div v-if="itemsComanda.length === 0" class="h-full flex flex-col items-center justify-center text-slate-400 text-sm">
           <span class="text-3xl mb-2">🍽️</span>
           <p class="font-bold">No hay platillos seleccionados</p>
-          <span class="text-xs text-slate-400 mt-1 text-center">Toca los platillos de la izquierda para agregarlos a la orden</span>
+          <span class="text-xs text-slate-400 dark:text-slate-500 mt-1 text-center">Toca los platillos de la izquierda para agregarlos a la orden</span>
         </div>
 
         <div 
           v-for="(item, index) in itemsComanda" 
           :key="index"
-          class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5"
+          class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5"
         >
           <div class="flex items-center justify-between">
             <div class="flex-1 min-w-0 pr-2">
-              <h4 class="font-bold text-sm text-slate-800 truncate">{{ item.nombre }}</h4>
-              <div class="text-xs text-slate-500 font-semibold">${{ Number(item.precio).toFixed(2) }} c/u</div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{{ item.nombre }}</h4>
+              <div class="text-xs text-slate-500 dark:text-slate-400 font-semibold">${{ Number(item.precio).toFixed(2) }} c/u</div>
             </div>
             <div class="flex items-center gap-1.5">
-              <button @click="decrementar(index)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center font-bold text-sm hover:bg-slate-100">-</button>
-              <span class="font-black text-sm w-5 text-center">{{ item.cantidad }}</span>
-              <button @click="incrementar(index)" class="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center font-bold text-sm hover:bg-slate-100">+</button>
-              <span class="font-black text-sm text-slate-800 ml-2 w-16 text-right">${{ (item.precio * item.cantidad).toFixed(2) }}</span>
+              <button @click="decrementar(index)" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-sm hover:bg-slate-100 dark:hover:bg-slate-600">-</button>
+              <span class="font-black text-sm w-5 text-center text-slate-800 dark:text-slate-100">{{ item.cantidad }}</span>
+              <button @click="incrementar(index)" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-sm hover:bg-slate-100 dark:hover:bg-slate-600">+</button>
+              <span class="font-black text-sm text-slate-800 dark:text-slate-100 ml-2 w-16 text-right">${{ (item.precio * item.cantidad).toFixed(2) }}</span>
             </div>
           </div>
 
@@ -107,24 +107,24 @@
             v-model="item.notas"
             type="text"
             placeholder="Nota para cocina (ej. sin cebolla, salsa aparte)"
-            class="w-full text-xs p-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-eden-600 text-slate-600"
+            class="w-full text-xs p-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:border-eden-600"
           />
         </div>
       </div>
 
       <!-- Resumen y Envío a Cocina -->
-      <div class="p-4 border-t border-slate-100 bg-slate-50 space-y-3">
+      <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 space-y-3">
         <!-- Notas generales de la mesa -->
         <input 
           v-model="notasGenerales"
           type="text"
           placeholder="Notas de la comanda general..."
-          class="w-full text-xs p-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-eden-600"
+          class="w-full text-xs p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
         />
 
-        <div class="flex justify-between items-center text-lg font-black text-slate-900 border-t border-slate-200 pt-2">
+        <div class="flex justify-between items-center text-lg font-black text-slate-900 dark:text-slate-100 border-t border-slate-200 dark:border-slate-700 pt-2">
           <span>Total Estimado</span>
-          <span class="text-eden-600">${{ total.toFixed(2) }}</span>
+          <span class="text-eden-600 dark:text-eden-400">${{ total.toFixed(2) }}</span>
         </div>
 
         <button 
@@ -204,7 +204,7 @@ const enviarComandaCocina = async () => {
   try {
     const ordenPayload = {
       mesa_id: mesaId.value,
-      mesero_id: authStore.usuarioActual.id,
+      mesero_id: authStore.usuarioActual?.id || 1,
       notas: notasGenerales.value || null,
       items: itemsComanda.value.map(i => ({
         producto_id: i.id,
