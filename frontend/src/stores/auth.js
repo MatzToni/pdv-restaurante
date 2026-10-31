@@ -78,6 +78,14 @@ export const useAuthStore = defineStore('auth', {
       this.usuarios.push(data)
       return data
     },
+    async actualizarUsuario(id, datosUsuario) {
+      const { data } = await api.patch(`/usuarios/${id}`, datosUsuario)
+      await this.cargarUsuarios()
+      if (this.usuarioActual && this.usuarioActual.id === id) {
+        this.establecerSesion({ ...this.usuarioActual, ...data })
+      }
+      return data
+    },
     async verificarPin(pin) {
       const { data } = await api.post('/usuarios/verificar-pin', { pin })
       return data

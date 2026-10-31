@@ -41,6 +41,11 @@ def crear_usuario(usuario_in: UsuarioCreate, db: Session = Depends(get_db)):
     if existente:
         raise HTTPException(status_code=400, detail="Ya existe un colaborador con este correo electrónico.")
     
+    if usuario_in.pin_seguridad:
+        pin_str = str(usuario_in.pin_seguridad).strip()
+        if pin_str and (not pin_str.isdigit() or len(pin_str) != 4):
+            raise HTTPException(status_code=400, detail="El PIN de seguridad debe contener exactamente 4 dígitos numéricos.")
+
     nuevo_usuario = Usuario(
         nombre=usuario_in.nombre,
         email=usuario_in.email,
@@ -66,11 +71,17 @@ def crear_usuario(usuario_in: UsuarioCreate, db: Session = Depends(get_db)):
     db.refresh(nuevo_usuario)
     return nuevo_usuario
 
+@router.put("/{usuario_id}", response_model=UsuarioDetalleOut, summary="Actualizar información o expediente del colaborador")
 @router.patch("/{usuario_id}", response_model=UsuarioDetalleOut, summary="Actualizar información o expediente del colaborador")
 def actualizar_usuario(usuario_id: int, datos: UsuarioUpdate, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Colaborador no encontrado.")
+
+    if datos.pin_seguridad is not None:
+        pin_str = str(datos.pin_seguridad).strip()
+        if pin_str and (not pin_str.isdigit() or len(pin_str) != 4):
+            raise HTTPException(status_code=400, detail="El PIN de seguridad debe contener exactamente 4 dígitos numéricos.")
 
     datos_dict = datos.model_dump(exclude_unset=True)
     for campo, valor in datos_dict.items():

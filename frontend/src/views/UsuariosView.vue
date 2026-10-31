@@ -100,7 +100,15 @@
               PIN: ••••
             </span>
 
-            <!-- Botón Ver Expediente Completo -->
+            <!-- Botones de Acción: Editar y Expediente -->
+            <button 
+              @click="abrirModalEditar(u)"
+              title="Editar datos de este colaborador"
+              class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition active:scale-95 flex items-center gap-1 border border-slate-200 dark:border-slate-700"
+            >
+              ✏️ Editar
+            </button>
+
             <button 
               @click="verDetalleColaborador(u.id)"
               class="px-3 py-1.5 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition active:scale-95 flex items-center gap-1"
@@ -129,12 +137,20 @@
               </span>
             </div>
           </div>
-          <button 
-            @click="modalDetalle = false" 
-            class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold"
-          >
-            ✕
-          </button>
+          <div class="flex items-center gap-2">
+            <button 
+              @click="abrirModalEditar(usuarioDetalle)"
+              class="px-3 py-1.5 bg-eden-600 hover:bg-eden-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 transition shadow-xs"
+            >
+              ✏️ Editar
+            </button>
+            <button 
+              @click="modalDetalle = false" 
+              class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm font-bold"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         <!-- Pestañas del Expediente -->
@@ -319,12 +335,18 @@
       </div>
     </div>
 
-    <!-- Modal Registrar Nuevo Colaborador -->
-    <div v-if="modalNuevoUsuario" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 my-8">
-        <h3 class="text-lg font-black text-slate-800 dark:text-slate-100">Registrar Nuevo Colaborador</h3>
+    <!-- Modal Registrar o Editar Colaborador -->
+    <div v-if="modalUsuario" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 my-8 flex flex-col max-h-[90vh]">
+        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+          <h3 class="text-lg font-black text-slate-800 dark:text-slate-100">
+            {{ editandoId ? 'Editar Información del Colaborador' : 'Registrar Nuevo Colaborador' }}
+          </h3>
+          <button @click="modalUsuario = false" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+        </div>
 
-        <div class="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
+        <div class="space-y-3.5 overflow-y-auto pr-1 flex-1">
+          <!-- Nombre Completo -->
           <div>
             <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Nombre Completo *</label>
             <input 
@@ -335,6 +357,7 @@
             />
           </div>
 
+          <!-- Correo y Teléfono -->
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Correo Electrónico *</label>
@@ -347,29 +370,30 @@
             </div>
 
             <div>
-              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Teléfono</label>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Teléfono Móvil</label>
               <input 
                 v-model="formUsuario.telefono" 
-                type="text" 
+                type="tel" 
                 placeholder="555-000-0000" 
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>
           </div>
 
+          <!-- Rol y Turno -->
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Rol *</label>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Rol del Personal *</label>
               <select 
                 v-model="formUsuario.rol" 
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               >
-                <option value="administrador">Administrador</option>
+                <option value="administrador">Administrador (Total)</option>
                 <option value="gerente">Gerente</option>
                 <option value="jefe">Jefe de Turno</option>
-                <option value="cocina">Cocina</option>
-                <option value="mesero">Mesero</option>
-                <option value="auxiliar_general">Auxiliar General</option>
+                <option value="cocina">Cocina / Barra</option>
+                <option value="mesero">Mesero / Salón</option>
+                <option value="auxiliar_general">Auxiliar General (Almacén)</option>
               </select>
             </div>
 
@@ -388,7 +412,7 @@
             </div>
           </div>
 
-          <!-- Switch Acceso al Sistema -->
+          <!-- Switch Acceso al Sistema PDV -->
           <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
             <input 
               v-model="formUsuario.acceso_sistema" 
@@ -396,69 +420,161 @@
               class="w-4 h-4 rounded text-eden-600 focus:ring-eden-500"
             />
             <div class="text-xs">
-              <span class="font-bold text-slate-800 dark:text-slate-200 block">¿Tiene acceso al sistema PDV?</span>
-              <span class="text-slate-400 block">Permite iniciar sesión en las computadoras, comandero o pantallas de cocina.</span>
+              <span class="font-bold text-slate-800 dark:text-slate-200 block">¿Habilitar acceso a terminales y comandero?</span>
+              <span class="text-slate-400 block">Permite iniciar sesión con su PIN o contraseña en el PDV.</span>
             </div>
           </label>
 
-          <div v-if="formUsuario.acceso_sistema" class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">PIN de Autorización (4 dígitos)</label>
+          <!-- PIN DE SEGURIDAD CON MÁSCARA ESTRICTA DE 4 DÍGITOS -->
+          <div v-if="formUsuario.acceso_sistema" class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-black text-slate-700 dark:text-slate-300">
+                PIN de Autorización y Acceso *
+              </label>
+              <span 
+                class="text-3xs font-mono font-black px-2 py-0.5 rounded-full"
+                :class="(formUsuario.pin_seguridad || '').length === 4 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'"
+              >
+                {{ (formUsuario.pin_seguridad || '').length }} / 4 dígitos
+              </span>
+            </div>
+
+            <!-- Input con máscara estricta que solo admite números de 0 a 9 y máximo 4 caracteres -->
+            <div class="space-y-1.5">
               <input 
-                v-model="formUsuario.pin_seguridad" 
+                :value="formUsuario.pin_seguridad" 
+                @input="sanitizarPin"
                 type="password" 
                 maxlength="4"
-                placeholder="1234" 
-                class="w-full mt-1 p-2.5 text-xs font-mono tracking-widest border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                placeholder="••••" 
+                class="w-full p-2.5 text-center text-xl tracking-[0.6em] font-mono font-black border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
+              />
+
+              <!-- Indicadores visuales de 4 esferas -->
+              <div class="flex justify-center items-center gap-2.5 py-1">
+                <div 
+                  v-for="d in 4" 
+                  :key="d"
+                  :class="[
+                    'w-3 h-3 rounded-full border-2 transition-all',
+                    (formUsuario.pin_seguridad || '').length >= d 
+                      ? 'bg-eden-600 border-eden-600 scale-110 shadow-xs' 
+                      : 'border-slate-300 dark:border-slate-600'
+                  ]"
+                ></div>
+              </div>
+            </div>
+
+            <p class="text-3xs text-slate-400 text-center">
+              Solo se permiten 4 números (0-9). Se utiliza para login táctil y autorizaciones de caja o cancelaciones.
+            </p>
+          </div>
+
+          <!-- Salario y Fecha de Ingreso -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Salario Diario ($ MXN)</label>
+              <input 
+                v-model.number="formUsuario.salario_diario" 
+                type="number" 
+                step="10.00"
+                placeholder="0.00" 
+                class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600 font-mono"
               />
             </div>
 
             <div>
-              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Contraseña</label>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Fecha de Ingreso</label>
               <input 
-                v-model="formUsuario.password" 
-                type="password" 
-                placeholder="••••••••" 
+                v-model="formUsuario.fecha_ingreso" 
+                type="date" 
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-2">
+          <!-- Documentación Oficial -->
+          <div class="grid grid-cols-3 gap-2">
             <div>
-              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">CURP</label>
+              <label class="text-3xs font-bold text-slate-700 dark:text-slate-300">CURP</label>
               <input 
                 v-model="formUsuario.curp" 
                 type="text" 
-                placeholder="XXXX000000XXXXXX00" 
+                placeholder="18 caracteres" 
+                class="w-full mt-1 p-2 text-xs font-mono uppercase border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
+              />
+            </div>
+            <div>
+              <label class="text-3xs font-bold text-slate-700 dark:text-slate-300">RFC</label>
+              <input 
+                v-model="formUsuario.rfc" 
+                type="text" 
+                placeholder="13 caracteres" 
+                class="w-full mt-1 p-2 text-xs font-mono uppercase border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
+              />
+            </div>
+            <div>
+              <label class="text-3xs font-bold text-slate-700 dark:text-slate-300">NSS</label>
+              <input 
+                v-model="formUsuario.nss" 
+                type="text" 
+                placeholder="Seguro Social" 
+                class="w-full mt-1 p-2 text-xs font-mono border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
+              />
+            </div>
+          </div>
+
+          <!-- Contacto de Emergencia -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Contacto de Emergencia</label>
+              <input 
+                v-model="formUsuario.contacto_emergencia_nombre" 
+                type="text" 
+                placeholder="Nombre familiar" 
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>
             <div>
-              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">RFC</label>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Tel. Emergencia</label>
               <input 
-                v-model="formUsuario.rfc" 
-                type="text" 
-                placeholder="XXXX000000XXX" 
+                v-model="formUsuario.contacto_emergencia_telefono" 
+                type="tel" 
+                placeholder="555-000-0000" 
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>
           </div>
+
+          <!-- Estatus Activo / Inactivo -->
+          <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
+            <input 
+              v-model="formUsuario.activo" 
+              type="checkbox" 
+              class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+            />
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
+              Colaborador activo en nómina y plantilla
+            </span>
+          </label>
         </div>
 
-        <div class="flex gap-2 pt-2">
+        <div class="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button 
-            @click="modalNuevoUsuario = false" 
+            @click="modalUsuario = false" 
             class="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-xs transition"
           >
             Cancelar
           </button>
           <button 
             @click="guardarUsuario" 
-            :disabled="!formUsuario.nombre || !formUsuario.email"
+            :disabled="!formUsuario.nombre || !formUsuario.email || guardando"
             class="flex-1 py-2.5 bg-eden-600 hover:bg-eden-700 disabled:opacity-50 text-white rounded-xl font-bold text-xs transition shadow-sm"
           >
-            Guardar Colaborador
+            <span v-if="guardando">Guardando...</span>
+            <span v-else>{{ editandoId ? 'Guardar Cambios' : 'Registrar Colaborador' }}</span>
           </button>
         </div>
       </div>
@@ -474,7 +590,9 @@ import api from '../api'
 const authStore = useAuthStore()
 
 const filtroTurno = ref('todos')
-const modalNuevoUsuario = ref(false)
+const modalUsuario = ref(false)
+const editandoId = ref(null)
+const guardando = ref(false)
 const modalDetalle = ref(false)
 const tabExpediente = ref('laboral')
 const usuarioDetalle = ref(null)
@@ -490,7 +608,12 @@ const formUsuario = ref({
   password: 'edencafe123',
   curp: '',
   rfc: '',
-  nss: ''
+  nss: '',
+  salario_diario: 0,
+  fecha_ingreso: '',
+  contacto_emergencia_nombre: '',
+  contacto_emergencia_telefono: '',
+  activo: true
 })
 
 const formDoc = ref({
@@ -509,7 +632,14 @@ const usuariosFiltrados = computed(() => {
   return authStore.usuarios.filter(u => u.turno === filtroTurno.value)
 })
 
+// Sanitiza el PIN para aceptar estrictamente números y máximo 4 dígitos
+const sanitizarPin = (e) => {
+  const digitos = e.target.value.replace(/\D/g, '').slice(0, 4)
+  formUsuario.value.pin_seguridad = digitos
+}
+
 const abrirModalNuevoUsuario = () => {
+  editandoId.value = null
   formUsuario.value = {
     nombre: '',
     email: '',
@@ -521,9 +651,37 @@ const abrirModalNuevoUsuario = () => {
     password: 'edencafe123',
     curp: '',
     rfc: '',
-    nss: ''
+    nss: '',
+    salario_diario: 0,
+    fecha_ingreso: '',
+    contacto_emergencia_nombre: '',
+    contacto_emergencia_telefono: '',
+    activo: true
   }
-  modalNuevoUsuario.value = true
+  modalUsuario.value = true
+}
+
+const abrirModalEditar = async (u) => {
+  editandoId.value = u.id
+  formUsuario.value = {
+    nombre: u.nombre || '',
+    email: u.email || '',
+    telefono: u.telefono || '',
+    rol: u.rol || 'mesero',
+    turno: u.turno || 'matutino',
+    acceso_sistema: u.acceso_sistema ?? true,
+    pin_seguridad: u.pin_seguridad || '',
+    password: '',
+    curp: u.curp || '',
+    rfc: u.rfc || '',
+    nss: u.nss || '',
+    salario_diario: Number(u.salario_diario || 0),
+    fecha_ingreso: u.fecha_ingreso || '',
+    contacto_emergencia_nombre: u.contacto_emergencia_nombre || '',
+    contacto_emergencia_telefono: u.contacto_emergencia_telefono || '',
+    activo: u.activo ?? true
+  }
+  modalUsuario.value = true
 }
 
 const verDetalleColaborador = async (id) => {
@@ -538,12 +696,35 @@ const verDetalleColaborador = async (id) => {
 }
 
 const guardarUsuario = async () => {
+  if (formUsuario.value.acceso_sistema && formUsuario.value.pin_seguridad) {
+    if (formUsuario.value.pin_seguridad.length !== 4) {
+      alert('El PIN de seguridad debe contener exactamente 4 dígitos numéricos.')
+      return
+    }
+  }
+
+  guardando.value = true
   try {
-    await authStore.crearUsuario(formUsuario.value)
-    modalNuevoUsuario.value = false
-    alert('Colaborador registrado exitosamente.')
+    if (editandoId.value) {
+      // Actualizar colaborador existente
+      const payload = { ...formUsuario.value }
+      if (!payload.password) delete payload.password // No sobrescribir si no se cambió
+      
+      const res = await authStore.actualizarUsuario(editandoId.value, payload)
+      if (usuarioDetalle.value && usuarioDetalle.value.id === editandoId.value) {
+        usuarioDetalle.value = { ...usuarioDetalle.value, ...res }
+      }
+      alert('Información del colaborador actualizada correctamente.')
+    } else {
+      // Crear nuevo colaborador
+      await authStore.crearUsuario(formUsuario.value)
+      alert('Colaborador registrado exitosamente.')
+    }
+    modalUsuario.value = false
   } catch (err) {
-    alert(err.response?.data?.detail || 'Error al registrar colaborador.')
+    alert(err.response?.data?.detail || 'Error al guardar la información del colaborador.')
+  } finally {
+    guardando.value = false
   }
 }
 
