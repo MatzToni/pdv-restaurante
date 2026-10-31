@@ -1,7 +1,18 @@
 import axios from 'axios'
 
+const obtenerBaseURL = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL
+  }
+  // En dispositivos móviles / tablets en la misma red local (LAN)
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    return `http://${window.location.hostname}:8000/api/v1`
+  }
+  return 'http://localhost:8000/api/v1'
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
+  baseURL: obtenerBaseURL(),
   headers: {
     'Content-Type': 'application/json'
   },

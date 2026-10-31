@@ -58,9 +58,12 @@ export const useMenuStore = defineStore('menu', {
       if (imagenUrl.startsWith('http://') || imagenUrl.startsWith('https://') || imagenUrl.startsWith('data:image/')) {
         return imagenUrl
       }
-      const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
-      const rootServer = apiBase.replace(/\/api\/v1\/?$/, '')
-      return `${rootServer}${imagenUrl.startsWith('/') ? '' : '/'}${imagenUrl}`
+      if (import.meta.env.VITE_API_BASE_URL) {
+        const rootServer = import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, '')
+        return `${rootServer}${imagenUrl.startsWith('/') ? '' : '/'}${imagenUrl}`
+      }
+      const hostname = typeof window !== 'undefined' && window.location?.hostname ? window.location.hostname : 'localhost'
+      return `http://${hostname}:8000${imagenUrl.startsWith('/') ? '' : '/'}${imagenUrl}`
     },
     async crearCategoria(catData) {
       const { data } = await api.post('/menu/categorias', catData)
