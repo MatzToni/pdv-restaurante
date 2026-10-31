@@ -58,13 +58,22 @@
           >
             <div class="flex justify-between items-start">
               <span class="font-bold text-base text-slate-800 dark:text-slate-100">{{ mesa.numero }}</span>
-              <span 
-                :class="[
-                  'w-3 h-3 rounded-full',
-                  mesa.estado === 'libre' ? 'bg-emerald-500' :
-                  mesa.estado === 'ocupada' ? 'bg-amber-500' : 'bg-rose-500'
-                ]"
-              ></span>
+              <div class="flex items-center gap-1.5">
+                <span v-if="getAlertaMesa(mesa.id)" 
+                  :class="[
+                    'text-3xs font-black px-1.5 py-0.5 rounded-full uppercase',
+                    getAlertaMesa(mesa.id).tipo === 'observacion' ? 'bg-amber-500 text-white animate-pulse' : 'bg-emerald-500 text-white'
+                  ]">
+                  {{ getAlertaMesa(mesa.id).texto }}
+                </span>
+                <span 
+                  :class="[
+                    'w-3 h-3 rounded-full',
+                    mesa.estado === 'libre' ? 'bg-emerald-500' :
+                    mesa.estado === 'ocupada' ? 'bg-amber-500' : 'bg-rose-500'
+                  ]"
+                ></span>
+              </div>
             </div>
 
             <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -147,10 +156,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMesasStore } from '../stores/mesas'
+import { useOrdenesStore } from '../stores/ordenes'
 import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
 const mesasStore = useMesasStore()
+const ordenesStore = useOrdenesStore()
 const authStore = useAuthStore()
 
 const modalNuevaMesa = ref(false)
@@ -163,7 +174,18 @@ const formMesa = ref({
 
 onMounted(() => {
   mesasStore.cargarMesas()
+  ordenesStore.cargarOrdenesActivas()
 })
+
+const getAlertaMesa = (mesaId) => {
+  const ord = ordenesStore.ordenesActivas.find(o => o.mesa_id === mesaId && o.estado !== 'pagado' && o.estado !== 'cancelada')
+  if (!ord) return null
+  const tieneObservacion = ord.items?.some(i => i.estado === 'en_observacion')
+  if (tieneObservacion) return { tipo: 'observacion', texto: '⚠️ Cocina' }
+  const tieneListo = ord.items?.some(i => i.estado === 'listo')
+  if (tieneListo) return { tipo: 'listo', texto: '✓ Listo' }
+  return null
+}
 
 const mesasPorArea = computed(() => {
   return mesasStore.areas.map(area => ({

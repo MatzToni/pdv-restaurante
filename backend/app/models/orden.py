@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Numeric, Boolean, Enum, ForeignKey, DateTime, Text
+from sqlalchemy import Column, Integer, String, Numeric, Boolean, Enum, ForeignKey, DateTime, Text, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.session import Base
@@ -15,6 +15,7 @@ class EstadoOrden(str, enum.Enum):
 class EstadoOrdenItem(str, enum.Enum):
     PENDIENTE = "pendiente"
     PREPARANDO = "preparando"
+    EN_OBSERVACION = "en_observacion"
     LISTO = "listo"
     ENTREGADO = "entregado"
     CANCELADO = "cancelado"
@@ -38,6 +39,14 @@ class Orden(Base):
     items = relationship("OrdenItem", back_populates="orden", cascade="all, delete-orphan")
     pagos = relationship("Pago", back_populates="orden")
 
+    @property
+    def mesa_numero(self) -> str:
+        return self.mesa.numero if self.mesa else f"Mesa {self.mesa_id}"
+
+    @property
+    def mesero_nombre(self) -> str:
+        return self.mesero.nombre if self.mesero else f"Mesero #{self.mesero_id}"
+
 class OrdenItem(Base):
     __tablename__ = "orden_items"
 
@@ -47,6 +56,8 @@ class OrdenItem(Base):
     cantidad = Column(Integer, default=1, nullable=False)
     precio_unitario = Column(Numeric(10, 2), nullable=False)
     notas = Column(String(255), nullable=True) # ej. "Término 3/4, sin cebolla"
+    extras = Column(JSON, default=list, nullable=True) # [{"nombre": "Extra queso", "precio": 20.0}]
+    observacion_cocina = Column(String(255), nullable=True) # Aclaración o falta de ingrediente desde cocina
     estado = Column(Enum(EstadoOrdenItem), default=EstadoOrdenItem.PENDIENTE, nullable=False)
     
     # Manejo de rechazos y cancelaciones
@@ -57,3 +68,7 @@ class OrdenItem(Base):
     orden = relationship("Orden", back_populates="items")
     producto = relationship("Producto")
     usuario_cancelo = relationship("Usuario")
+
+    @property
+    def producto_nombre(self) -> str:
+        return self.producto.nombre if self.producto else f"Platillo #{self.producto_id}"

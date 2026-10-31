@@ -18,13 +18,45 @@ export const useOrdenesStore = defineStore('ordenes', {
         this.cargando = false
       }
     },
+    async obtenerOrdenActivaMesa(mesaId) {
+      try {
+        const { data } = await api.get(`/ordenes/mesa/${mesaId}/activa`)
+        return data
+      } catch (err) {
+        console.error('Error obteniendo orden activa de la mesa:', err)
+        return null
+      }
+    },
     async enviarComanda(ordenData) {
       const { data } = await api.post('/ordenes/', ordenData)
-      this.ordenesActivas.push(data)
+      await this.cargarOrdenesActivas()
+      return data
+    },
+    async agregarItemsAOrden(ordenId, itemsData) {
+      const { data } = await api.post(`/ordenes/${ordenId}/items`, { items: itemsData })
+      await this.cargarOrdenesActivas()
       return data
     },
     async cambiarEstadoItem(itemId, nuevoEstado) {
       const { data } = await api.patch(`/ordenes/items/${itemId}/estado`, { estado: nuevoEstado })
+      await this.cargarOrdenesActivas()
+      return data
+    },
+    async reportarObservacionItem(itemId, observacion) {
+      const { data } = await api.post(`/ordenes/items/${itemId}/observacion`, { observacion })
+      await this.cargarOrdenesActivas()
+      return data
+    },
+    async resolverObservacionItem(itemId, { accion, respuesta }) {
+      const { data } = await api.post(`/ordenes/items/${itemId}/resolver-observacion`, {
+        accion,
+        respuesta
+      })
+      await this.cargarOrdenesActivas()
+      return data
+    },
+    async pedirCuenta(ordenId) {
+      const { data } = await api.post(`/ordenes/${ordenId}/pedir-cuenta`)
       await this.cargarOrdenesActivas()
       return data
     },
