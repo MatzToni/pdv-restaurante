@@ -10,62 +10,81 @@
         'hidden md:flex flex-col justify-between sticky top-0 h-screen z-40 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0',
         'bg-white/70 dark:bg-slate-900/75 backdrop-blur-2xl backdrop-saturate-150',
         'border-r border-white/40 dark:border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.04)]',
-        sidebarExpandida ? 'w-64 p-4' : 'w-20 p-2.5 items-center'
+        sidebarExpandida ? 'w-72 p-4' : 'w-20 p-2.5 items-center'
       ]"
     >
-      <!-- Cabecera de Barra Lateral: Logo, Marca y Botón Retraer/Expandir -->
+      <!-- Cabecera de Barra Lateral: Logo Grande, Letras Abajo y Botón Retraer/Expandir -->
       <div class="w-full">
-        <div 
-          class="flex items-center gap-3 transition-all pb-3.5 mb-2 border-b border-white/50 dark:border-white/10"
-          :class="sidebarExpandida ? 'justify-between' : 'flex-col justify-center gap-2'"
-        >
-          <!-- Logo y Marca -->
-          <router-link to="/" class="flex items-center gap-2.5 group">
-            <div class="relative shrink-0">
+        <!-- Modo Expandido -->
+        <div v-if="sidebarExpandida" class="pb-3 mb-2 border-b border-white/50 dark:border-white/10">
+          <!-- Barra superior de control: Botón de contraer a la derecha -->
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-3xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 pl-1">
+              Edén Café PDV
+            </span>
+            <button
+              @click="alternarSidebar"
+              title="Contraer barra lateral"
+              class="rounded-xl p-1.5 bg-white/60 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-white/50 dark:border-white/10 shadow-xs transition-all active:scale-95 flex items-center justify-center shrink-0"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                class="w-4 h-4" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                stroke-width="2.5" 
+                stroke-linecap="round" 
+                stroke-linejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Logo grande centrado y letras abajo del logo -->
+          <router-link to="/" class="flex flex-col items-center text-center group py-1.5">
+            <div class="relative mb-2">
               <img 
                 src="/logo.png" 
                 alt="Edén Café Logo" 
-                :class="[
-                  'object-contain rounded-2xl shadow-sm ring-1 ring-white/80 dark:ring-white/10 group-hover:scale-105 transition-transform',
-                  sidebarExpandida ? 'w-10 h-10' : 'w-11 h-11'
-                ]"
+                class="w-20 h-20 object-contain drop-shadow-md group-hover:scale-105 transition-transform"
+              />
+              <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+            </div>
+
+            <!-- Letras abajo del logo -->
+            <h1 class="font-black text-slate-800 dark:text-slate-100 text-base leading-tight tracking-tight">
+              Edén Café
+            </h1>
+            <span class="text-xs text-eden-700 dark:text-eden-400 font-extrabold tracking-tight mt-0.5">
+              Comida Tradicional y Café
+            </span>
+            <span class="inline-flex items-center gap-1.5 text-3xs text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider mt-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/40">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sistema en línea
+            </span>
+          </router-link>
+        </div>
+
+        <!-- Modo Contraído -->
+        <div v-else class="flex flex-col items-center gap-2.5 pb-3 mb-2 border-b border-white/50 dark:border-white/10">
+          <router-link to="/" class="group">
+            <div class="relative">
+              <img 
+                src="/logo.png" 
+                alt="Edén Café Logo" 
+                class="w-12 h-12 object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
               />
               <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
             </div>
-
-            <!-- Nombre de Marca (Solo visible cuando está expandida) -->
-            <div v-if="sidebarExpandida" class="overflow-hidden">
-              <h1 class="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight tracking-tight truncate">
-                Edén Café
-              </h1>
-              <span class="text-2xs text-eden-600 dark:text-eden-400 font-bold tracking-tight block truncate">
-                Punto de Venta
-              </span>
-            </div>
           </router-link>
 
-          <!-- Botón de Conmutación (Retraer / Expandir Barra Lateral) -->
           <button
             @click="alternarSidebar"
-            :title="sidebarExpandida ? 'Contraer barra lateral' : 'Expandir barra lateral'"
+            title="Expandir barra lateral"
             class="rounded-xl p-2 bg-white/60 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-white/50 dark:border-white/10 shadow-xs transition-all active:scale-95 flex items-center justify-center shrink-0"
           >
-            <!-- Icono Chevron iOS Izquierda / Derecha -->
             <svg 
-              v-if="sidebarExpandida" 
-              xmlns="http://www.w3.org/2000/svg" 
-              class="w-4 h-4" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              stroke-width="2.5" 
-              stroke-linecap="round" 
-              stroke-linejoin="round"
-            >
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-            <svg 
-              v-else 
               xmlns="http://www.w3.org/2000/svg" 
               class="w-4 h-4" 
               viewBox="0 0 24 24" 
@@ -170,24 +189,30 @@
           :class="[
             'rounded-2xl transition-all',
             sidebarExpandida 
-              ? 'p-2.5 bg-white/60 dark:bg-slate-800/60 border border-white/60 dark:border-white/10 shadow-xs flex items-center gap-2.5 backdrop-blur-md'
+              ? 'p-3 bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/10 shadow-xs flex items-center gap-3 backdrop-blur-md'
               : 'relative group flex justify-center'
           ]"
         >
           <!-- Avatar con Inicial -->
           <div 
-            class="w-9 h-9 rounded-xl bg-gradient-to-br from-eden-500 to-eden-700 text-white flex items-center justify-center font-black text-xs shadow-sm ring-1 ring-white/60 dark:ring-white/10 shrink-0"
+            class="w-10 h-10 rounded-2xl bg-gradient-to-br from-eden-500 to-eden-700 text-white flex items-center justify-center font-black text-sm shadow-sm ring-1 ring-white/60 dark:ring-white/10 shrink-0"
           >
             {{ authStore.usuarioActual.nombre ? authStore.usuarioActual.nombre.charAt(0) : 'U' }}
           </div>
 
           <!-- Nombre y Rol (Modo Expandido) -->
-          <div v-if="sidebarExpandida" class="overflow-hidden flex-1">
-            <div class="text-xs font-black text-slate-800 dark:text-slate-100 truncate">
+          <div v-if="sidebarExpandida" class="min-w-0 flex-1">
+            <div 
+              class="text-xs font-black text-slate-800 dark:text-slate-100 leading-snug break-words"
+              :title="authStore.usuarioActual.nombre"
+            >
               {{ authStore.usuarioActual.nombre }}
             </div>
-            <div class="text-2xs font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-eden-100 dark:bg-eden-950/80 text-eden-700 dark:text-eden-400 tracking-wider truncate inline-block">
-              {{ authStore.usuarioActual.rol }}
+            <div class="mt-1 flex items-center gap-1.5 flex-wrap">
+              <span class="text-3xs font-extrabold uppercase px-2 py-0.5 rounded-md bg-eden-100 dark:bg-eden-950/80 text-eden-700 dark:text-eden-400 tracking-wider">
+                {{ authStore.usuarioActual.rol }}
+              </span>
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             </div>
           </div>
 
@@ -363,19 +388,10 @@
         >
           <!-- Cabecera del Drawer -->
           <div>
-            <div class="flex items-center justify-between pb-4 mb-3 border-b border-white/50 dark:border-white/10">
-              <div class="flex items-center gap-3">
-                <img 
-                  src="/logo.png" 
-                  alt="Edén Café Logo" 
-                  class="w-10 h-10 object-contain rounded-2xl shadow-sm ring-1 ring-white/60 dark:ring-white/10"
-                />
-                <div>
-                  <h2 class="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight">Edén Café</h2>
-                  <span class="text-2xs text-eden-600 dark:text-eden-400 font-bold">Punto de Venta</span>
-                </div>
-              </div>
-
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-white/50 dark:border-white/10">
+              <span class="text-3xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                Edén Café PDV
+              </span>
               <!-- Botón Cerrar Drawer -->
               <button
                 @click="drawerMovilAbierto = false"
@@ -384,6 +400,20 @@
               >
                 ✕
               </button>
+            </div>
+
+            <!-- Logo Grande y Letras Abajo en Móvil -->
+            <div class="flex flex-col items-center text-center pb-3 mb-3 border-b border-white/50 dark:border-white/10">
+              <div class="relative mb-2">
+                <img 
+                  src="/logo.png" 
+                  alt="Edén Café Logo" 
+                  class="w-16 h-16 object-contain drop-shadow-md"
+                />
+                <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+              </div>
+              <h2 class="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight">Edén Café</h2>
+              <span class="text-2xs text-eden-600 dark:text-eden-400 font-bold">Comida Tradicional y Café</span>
             </div>
 
             <div class="px-2 mb-2 text-2xs font-extrabold tracking-wider uppercase text-slate-400 dark:text-slate-500">
@@ -426,20 +456,22 @@
 
           <!-- Pie del Drawer: Usuario, Tema y Logout -->
           <div class="pt-4 border-t border-white/50 dark:border-white/10 space-y-3">
-            <!-- Usuario -->
+            <!-- Usuario Móvil -->
             <div 
               v-if="authStore.usuarioActual" 
-              class="p-2.5 rounded-2xl bg-white/60 dark:bg-slate-800/60 border border-white/60 dark:border-white/10 shadow-xs flex items-center gap-3"
+              class="p-3 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/10 shadow-xs flex items-center gap-3"
             >
-              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-eden-500 to-eden-700 text-white flex items-center justify-center font-black text-xs shadow-sm">
+              <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-eden-500 to-eden-700 text-white flex items-center justify-center font-black text-sm shadow-sm ring-1 ring-white/60 dark:ring-white/10 shrink-0">
                 {{ authStore.usuarioActual.nombre ? authStore.usuarioActual.nombre.charAt(0) : 'U' }}
               </div>
-              <div class="overflow-hidden flex-1">
-                <div class="text-xs font-black text-slate-800 dark:text-slate-100 truncate">
+              <div class="min-w-0 flex-1">
+                <div class="text-xs font-black text-slate-800 dark:text-slate-100 leading-snug break-words">
                   {{ authStore.usuarioActual.nombre }}
                 </div>
-                <div class="text-2xs font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-eden-100 dark:bg-eden-950/80 text-eden-700 dark:text-eden-400 inline-block">
-                  {{ authStore.usuarioActual.rol }}
+                <div class="mt-1">
+                  <span class="text-3xs font-extrabold uppercase px-2 py-0.5 rounded-md bg-eden-100 dark:bg-eden-950/80 text-eden-700 dark:text-eden-400 inline-block">
+                    {{ authStore.usuarioActual.rol }}
+                  </span>
                 </div>
               </div>
             </div>
