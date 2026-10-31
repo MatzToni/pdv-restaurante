@@ -1,75 +1,166 @@
+from datetime import date
 from sqlalchemy.orm import Session
 from app.db.session import engine, SessionLocal, Base
 from app.models import (
-    Usuario, RolUsuario,
+    Usuario, RolUsuario, TurnoTrabajo, TipoDocumentoPersonal, DocumentoPersonal,
     Area, Mesa, EstadoMesa,
     Categoria, Producto,
     ArticuloInventario, TipoArticulo,
     Receta
 )
 
-# En producción se utiliza bcrypt; para el seed inicial asignamos contraseñas hasheadas o identificadores
 def init_db(db: Session) -> None:
-    # 1. Crear todas las tablas en PostgreSQL si no existen
+    # 1. Crear todas las tablas en PostgreSQL
     Base.metadata.create_all(bind=engine)
 
     # Si ya existen usuarios, no re-sembrar
     if db.query(Usuario).first():
-        print("Base de datos ya inicializada con datos previos.")
+        print("Base de datos ya cuenta con datos previos.")
         return
 
-    print("Inicializando base de datos de Edén Café con datos semilla...")
+    print("Inicializando base de datos de Edén Café...")
 
-    # 2. Usuarios con sus Roles
+    # 2. Personal con Roles, Turnos, Acceso al Sistema y Expediente
     admin = Usuario(
         nombre="Administrador Edén",
         email="admin@edencafe.com",
         password_hash="admin123",
         rol=RolUsuario.ADMINISTRADOR,
+        turno=TurnoTrabajo.COMPLETO,
+        acceso_sistema=True,
         pin_seguridad="1111",
+        telefono="555-100-0001",
+        curp="EDEN850101HDFR01",
+        rfc="EDE850101ABC",
+        fecha_ingreso=date(2024, 1, 15),
+        salario_diario=650.0,
         activo=True
     )
     gerente = Usuario(
-        nombre="Gerente General",
+        nombre="Valeria Mendoza (Gerente)",
         email="gerente@edencafe.com",
         password_hash="gerente123",
         rol=RolUsuario.GERENTE,
+        turno=TurnoTrabajo.MATUTINO,
+        acceso_sistema=True,
         pin_seguridad="2222",
+        telefono="555-100-0002",
+        curp="MENV900215MDFR02",
+        fecha_ingreso=date(2024, 3, 1),
+        salario_diario=450.0,
         activo=True
     )
     jefe = Usuario(
-        nombre="Jefe de Turno",
+        nombre="Javier Ortiz (Jefe Turno)",
         email="jefe@edencafe.com",
         password_hash="jefe123",
         rol=RolUsuario.JEFE,
+        turno=TurnoTrabajo.VESPERTINO,
+        acceso_sistema=True,
         pin_seguridad="3333",
+        telefono="555-100-0003",
+        fecha_ingreso=date(2024, 5, 10),
+        salario_diario=380.0,
         activo=True
     )
     cocinero = Usuario(
-        nombre="Chef Cocina",
+        nombre="Chef Roberto Martínez",
         email="cocina@edencafe.com",
         password_hash="cocina123",
         rol=RolUsuario.COCINA,
+        turno=TurnoTrabajo.MATUTINO,
+        acceso_sistema=True,
         pin_seguridad="4444",
+        telefono="555-100-0004",
+        fecha_ingreso=date(2024, 2, 20),
+        salario_diario=350.0,
         activo=True
     )
     mesero1 = Usuario(
-        nombre="Carlos López",
+        nombre="Carlos López (Mesero)",
         email="carlos@edencafe.com",
         password_hash="mesero123",
         rol=RolUsuario.MESERO,
+        turno=TurnoTrabajo.MATUTINO,
+        acceso_sistema=True,
         pin_seguridad="5555",
+        telefono="555-100-0005",
+        fecha_ingreso=date(2024, 6, 1),
+        salario_diario=260.0,
+        activo=True
+    )
+    mesera2 = Usuario(
+        nombre="Ana Gómez (Mesera)",
+        email="ana@edencafe.com",
+        password_hash="mesero123",
+        rol=RolUsuario.MESERO,
+        turno=TurnoTrabajo.VESPERTINO,
+        acceso_sistema=True,
+        pin_seguridad="5556",
+        telefono="555-100-0006",
+        fecha_ingreso=date(2024, 6, 15),
+        salario_diario=260.0,
         activo=True
     )
     auxiliar = Usuario(
-        nombre="Auxiliar Bodega",
+        nombre="Mario Torres (Auxiliar Almacén)",
         email="auxiliar@edencafe.com",
         password_hash="auxiliar123",
         rol=RolUsuario.AUXILIAR_GENERAL,
+        turno=TurnoTrabajo.MATUTINO,
+        acceso_sistema=True,
         pin_seguridad="6666",
+        telefono="555-100-0007",
+        fecha_ingreso=date(2024, 7, 1),
+        salario_diario=250.0,
         activo=True
     )
-    db.add_all([admin, gerente, jefe, cocinero, mesero1, auxiliar])
+    # Personal sin acceso al sistema (personal operativo de apoyo)
+    ayudante_externo = Usuario(
+        nombre="Pedro Ramírez (Apoyo General)",
+        email="pedro@edencafe.com",
+        password_hash="edencafe123",
+        rol=RolUsuario.AUXILIAR_GENERAL,
+        turno=TurnoTrabajo.VESPERTINO,
+        acceso_sistema=False, # Sin acceso a terminal
+        pin_seguridad=None,
+        telefono="555-100-0008",
+        fecha_ingreso=date(2024, 8, 1),
+        salario_diario=240.0,
+        activo=True
+    )
+
+    db.add_all([admin, gerente, jefe, cocinero, mesero1, mesera2, auxiliar, ayudante_externo])
+    db.commit()
+
+    # Documentos de muestra en el expediente del personal
+    doc1 = DocumentoPersonal(
+        usuario_id=mesero1.id,
+        tipo=TipoDocumentoPersonal.IDENTIFICACION_INE,
+        titulo="Credencial para Votar INE",
+        url_archivo="/docs/ine_carlos_lopez.pdf",
+        notas="Copia cotejada con original"
+    )
+    doc2 = DocumentoPersonal(
+        usuario_id=mesero1.id,
+        tipo=TipoDocumentoPersonal.CERTIFICADO_SALUD,
+        titulo="Constancia de Manejo Higiénico de Alimentos",
+        fecha_vencimiento=date(2027, 6, 1),
+        notas="Aprobado con vigencia de 1 año"
+    )
+    doc3 = DocumentoPersonal(
+        usuario_id=cocinero.id,
+        tipo=TipoDocumentoPersonal.CERTIFICADO_SALUD,
+        titulo="Certificado Médico Sanitario",
+        fecha_vencimiento=date(2027, 2, 20)
+    )
+    doc4 = DocumentoPersonal(
+        usuario_id=gerente.id,
+        tipo=TipoDocumentoPersonal.CONTRATO_LABORAL,
+        titulo="Contrato Laboral por Tiempo Indeterminado",
+        notas="Firmado en oficinas"
+    )
+    db.add_all([doc1, doc2, doc3, doc4])
     db.commit()
 
     # 3. Áreas y Mesas
@@ -95,7 +186,6 @@ def init_db(db: Session) -> None:
     db.commit()
 
     # 4. Inventario clasificado por tipos
-    # A) Ingredientes (recetas)
     cafe_grano = ArticuloInventario(nombre="Café en grano selección Edén", tipo=TipoArticulo.INGREDIENTE, unidad_medida="kg", stock_actual=25.0, stock_minimo=5.0, costo_unitario=280.0)
     leche_entera = ArticuloInventario(nombre="Leche entera pasteurizada", tipo=TipoArticulo.INGREDIENTE, unidad_medida="lt", stock_actual=40.0, stock_minimo=10.0, costo_unitario=26.0)
     pollo_pechuga = ArticuloInventario(nombre="Pechuga de pollo fresca", tipo=TipoArticulo.INGREDIENTE, unidad_medida="kg", stock_actual=18.0, stock_minimo=4.0, costo_unitario=125.0)
@@ -103,17 +193,14 @@ def init_db(db: Session) -> None:
     carne_res = ArticuloInventario(nombre="Carne de res para hamburguesa", tipo=TipoArticulo.INGREDIENTE, unidad_medida="kg", stock_actual=12.0, stock_minimo=3.0, costo_unitario=190.0)
     piloncillo_canela = ArticuloInventario(nombre="Piloncillo y canela para café", tipo=TipoArticulo.INGREDIENTE, unidad_medida="kg", stock_actual=8.0, stock_minimo=2.0, costo_unitario=65.0)
     
-    # B) Desechables
     vaso_12oz = ArticuloInventario(nombre="Vaso térmico para café 12oz", tipo=TipoArticulo.DESECHABLE, unidad_medida="pza", stock_actual=500.0, stock_minimo=100.0, costo_unitario=1.80)
     tapa_12oz = ArticuloInventario(nombre="Tapa para vaso 12oz", tipo=TipoArticulo.DESECHABLE, unidad_medida="pza", stock_actual=500.0, stock_minimo=100.0, costo_unitario=0.90)
     servilletas = ArticuloInventario(nombre="Servilleta de papel kraft", tipo=TipoArticulo.DESECHABLE, unidad_medida="pza", stock_actual=2000.0, stock_minimo=300.0, costo_unitario=0.15)
     
-    # C) Utensilios / Vajilla
     platos_barro = ArticuloInventario(nombre="Platos trinche de cerámica artesanal", tipo=TipoArticulo.UTENSILIO, unidad_medida="pza", stock_actual=48.0, stock_minimo=12.0, costo_unitario=75.0)
     tazas_cafe = ArticuloInventario(nombre="Tazas de café Edén", tipo=TipoArticulo.UTENSILIO, unidad_medida="pza", stock_actual=60.0, stock_minimo=15.0, costo_unitario=45.0)
     colador = ArticuloInventario(nombre="Colador de malla fina para cocina", tipo=TipoArticulo.UTENSILIO, unidad_medida="pza", stock_actual=4.0, stock_minimo=2.0, costo_unitario=85.0)
     
-    # D) Limpieza
     escoba = ArticuloInventario(nombre="Escoba uso rudo para restaurante", tipo=TipoArticulo.LIMPIEZA, unidad_medida="pza", stock_actual=5.0, stock_minimo=2.0, costo_unitario=95.0)
     jabon_trastes = ArticuloInventario(nombre="Detergente líquido concentrado", tipo=TipoArticulo.LIMPIEZA, unidad_medida="lt", stock_actual=20.0, stock_minimo=5.0, costo_unitario=42.0)
     
@@ -142,24 +229,20 @@ def init_db(db: Session) -> None:
     db.add_all([prod_cafe_olla, prod_cafe_leche, prod_chilaquiles, prod_hamburguesa, prod_limonada])
     db.commit()
 
-    # 6. Recetas (Escandallo para descuento automático de stock)
+    # 6. Recetas
     recetas = [
-        # Café de Olla: 20g café, 10g canela/piloncillo
         Receta(producto_id=prod_cafe_olla.id, articulo_id=cafe_grano.id, cantidad_requerida=0.020),
         Receta(producto_id=prod_cafe_olla.id, articulo_id=piloncillo_canela.id, cantidad_requerida=0.010),
-        # Café con Leche: 20g café, 250ml leche
         Receta(producto_id=prod_cafe_leche.id, articulo_id=cafe_grano.id, cantidad_requerida=0.020),
         Receta(producto_id=prod_cafe_leche.id, articulo_id=leche_entera.id, cantidad_requerida=0.250),
-        # Chilaquiles con Pollo: 150g tortillas, 120g pechuga pollo
         Receta(producto_id=prod_chilaquiles.id, articulo_id=tortillas.id, cantidad_requerida=0.150),
         Receta(producto_id=prod_chilaquiles.id, articulo_id=pollo_pechuga.id, cantidad_requerida=0.120),
-        # Hamburguesa: 200g carne de res
         Receta(producto_id=prod_hamburguesa.id, articulo_id=carne_res.id, cantidad_requerida=0.200),
     ]
     db.add_all(recetas)
     db.commit()
 
-    print("¡Base de datos sembrada exitosamente con usuarios, mesas, productos, inventario y recetas!")
+    print("¡Base de datos sembrada exitosamente con todas las tablas y datos iniciales de Edén Café!")
 
 if __name__ == "__main__":
     db = SessionLocal()
