@@ -1,5 +1,29 @@
 <template>
-  <div class="h-[calc(100vh-5.5rem)] md:h-[calc(100vh-3rem)] flex flex-col lg:flex-row gap-4">
+  <!-- Pantalla de Bloqueo si la mesa pertenece a otro mesero -->
+  <div v-if="esMesaDeOtroMesero" class="h-[calc(100vh-5.5rem)] md:h-[calc(100vh-3rem)] flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 max-w-md w-full shadow-xl text-center space-y-4">
+      <div class="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center text-3xl mx-auto shadow-inner">
+        🔒
+      </div>
+      <h2 class="text-xl font-black text-slate-800 dark:text-slate-100">Mesa No Disponible</h2>
+      <p class="text-sm text-slate-600 dark:text-slate-300">
+        La <strong>{{ mesaNumero }}</strong> está asignada a <span class="font-extrabold text-eden-700 dark:text-eden-400">{{ mesaActual?.mesero_nombre || 'otro colaborador' }}</span>.
+      </p>
+      <p class="text-xs text-slate-500 dark:text-slate-400">
+        Por políticas del restaurante, no tienes autorización para ver sus comandas ni agregarle rondas. Esta acción está restringida al mesero asignado o personal de jefatura.
+      </p>
+      <div class="pt-2">
+        <button 
+          @click="router.push('/')" 
+          class="w-full py-3 bg-eden-600 hover:bg-eden-700 text-white rounded-xl font-bold text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-2"
+        >
+          <span>←</span> Volver al Mapa de Mesas
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div v-else class="h-[calc(100vh-5.5rem)] md:h-[calc(100vh-3rem)] flex flex-col lg:flex-row gap-4">
     <!-- Menú y Selección de Platillos (Izquierda) -->
     <div class="flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm transition-colors">
       <!-- Barra superior con regreso y categorías -->
@@ -433,15 +457,31 @@ import { useRoute, useRouter } from 'vue-router'
 import { useMenuStore } from '../stores/menu'
 import { useOrdenesStore } from '../stores/ordenes'
 import { useAuthStore } from '../stores/auth'
+import { useMesasStore } from '../stores/mesas'
 
 const route = useRoute()
 const router = useRouter()
 const menuStore = useMenuStore()
 const ordenesStore = useOrdenesStore()
 const authStore = useAuthStore()
+const mesasStore = useMesasStore()
 
 const mesaId = computed(() => Number(route.query.mesaId) || 1)
 const mesaNumero = computed(() => route.query.mesaNumero || `Mesa ${mesaId.value}`)
+
+const esRolAlto = computed(() => {
+  return ['administrador', 'gerente', 'jefe'].includes(authStore.rolActual)
+})
+
+const mesaActual = computed(() => {
+  return mesasStore.mesas.find(m => m.id === mesaId.value)
+})
+
+const esMesaDeOtroMesero = computed(() => {
+  if (!mesaActual.value || !mesaActual.value.mesero_id) return false
+  if (esRolAlto.value) return false
+  return mesaActual.value.mesero_id !== authStore.usuarioActual?.id
+})
 
 const categoriaSeleccionada = ref(null)
 const itemsComanda = ref([])
@@ -484,12 +524,21 @@ const modificadoresRapidos = [
 ]
 
 onMounted(async () => {
-  await menuStore.cargarCatalogo()
-  await cargarOrdenDeMesa()
+  await Promise.all([
+    menuStore.cargarCatalogo(),
+    mesasStore.cargarMesas()
+  ])
+  if (!esMesaDeOtroMesero.value) {
+    await cargarOrdenDeMesa()
+  }
 })
 
 const cargarOrdenDeMesa = async () => {
-  ordenActiva.value = await ordenesStore.obtenerOrdenActivaMesa(mesaId.value)
+  if (esMesaDeOtroMesero.value) {
+    ordenActiva.value = null
+    return
+  }
+  ordenActiva.value = await ordenesStore.obtenerOrdenActivaMesa(mesaId.value, authStore.usuarioActual?.id)
 }
 
 const itemsEnObservacion = computed(() => {
@@ -578,6 +627,10 @@ const decrementar = (idx) => {
 }
 
 const enviarComandaCocina = async () => {
+  if (esMesaDeOtroMesero.value) {
+    alert('Esta mesa está asignada a otro mesero. No tienes permisos para agregar rondas.')
+    return
+  }
   if (itemsComanda.value.length === 0) return
   enviando.value = true
   try {
@@ -589,8 +642,8 @@ const enviarComandaCocina = async () => {
     }))
 
     if (ordenActiva.value) {
-      // Agregar ronda adicional a la orden existente
-      await ordenesStore.agregarItemsAOrden(ordenActiva.value.id, itemsPayload)
+      // Agregar ronda adicional a la orden existente pasando usuario_id
+      await ordenesStore.agregarItemsAOrden(ordenActiva.value.id, itemsPayload, authStore.usuarioActual?.id)
       alert(`¡Ronda adicional enviada a Cocina/Barra para ${mesaNumero.value}!`)
     } else {
       // Crear nueva comanda
@@ -608,13 +661,14 @@ const enviarComandaCocina = async () => {
     notasGenerales.value = ''
     await cargarOrdenDeMesa()
   } catch (err) {
-    alert('Error al enviar la comanda a cocina.')
+    alert(err.response?.data?.detail || 'Error al enviar la comanda a cocina.')
   } finally {
     enviando.value = false
   }
 }
 
 const pedirCuentaMesa = async () => {
+  if (esMesaDeOtroMesero.value) return
   if (!ordenActiva.value) return
   if (!confirm(`¿Solicitar cuenta para ${mesaNumero.value}? La mesa pasará a estado 'Por Cobrar' en Caja.`)) return
   try {
@@ -622,7 +676,7 @@ const pedirCuentaMesa = async () => {
     alert(`Mesa ${mesaNumero.value} enviada a Caja para cobro.`)
     router.push('/')
   } catch (err) {
-    alert('Error al pedir la cuenta.')
+    alert(err.response?.data?.detail || 'Error al pedir la cuenta.')
   }
 }
 

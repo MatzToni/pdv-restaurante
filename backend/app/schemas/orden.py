@@ -54,6 +54,7 @@ class OrdenCreate(BaseModel):
 
 class AgregarItemsOrdenRequest(BaseModel):
     items: List[OrdenItemCreate]
+    usuario_id: Optional[int] = None
 
 class CancelarOrdenRequest(BaseModel):
     pin_autorizacion: str

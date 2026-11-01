@@ -35,7 +35,16 @@ def listar_ordenes_activas(db: Session = Depends(get_db)):
     ).order_by(Orden.fecha_apertura.asc()).all()
 
 @router.get("/mesa/{mesa_id}/activa", response_model=Optional[OrdenOut], summary="Obtener comanda activa de una mesa")
-def obtener_orden_activa_mesa(mesa_id: int, db: Session = Depends(get_db)):
+def obtener_orden_activa_mesa(mesa_id: int, usuario_id: Optional[int] = None, db: Session = Depends(get_db)):
+    mesa = db.query(Mesa).filter(Mesa.id == mesa_id).first()
+    if mesa and mesa.mesero_id and usuario_id:
+        user = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+        if user and user.rol in [RolUsuario.MESERO, RolUsuario.AUXILIAR_GENERAL] and mesa.mesero_id != usuario_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Esta mesa está asignada a {mesa.mesero_nombre or 'otro mesero'}. No tienes permisos para ver sus comandas."
+            )
+
     orden = db.query(Orden).options(
         joinedload(Orden.mesa),
         joinedload(Orden.mesero),
@@ -51,6 +60,15 @@ def crear_orden(orden_in: OrdenCreate, db: Session = Depends(get_db)):
     mesa = db.query(Mesa).filter(Mesa.id == orden_in.mesa_id).first()
     if not mesa:
         raise HTTPException(status_code=404, detail="Mesa no encontrada.")
+
+    # Validar que otro mesero no tome orden en mesa ajena
+    if mesa.mesero_id and mesa.mesero_id != orden_in.mesero_id:
+        user = db.query(Usuario).filter(Usuario.id == orden_in.mesero_id).first()
+        if user and user.rol in [RolUsuario.MESERO, RolUsuario.AUXILIAR_GENERAL]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Esta mesa está asignada a {mesa.mesero_nombre or 'otro colaborador'}. Solo el mesero responsable o jefatura pueden crear comandas en ella."
+            )
 
     # 1. Crear Orden
     nueva_orden = Orden(
@@ -125,6 +143,16 @@ def agregar_items_a_orden(orden_id: int, request: AgregarItemsOrdenRequest, db: 
         raise HTTPException(status_code=404, detail="Orden no encontrada.")
     if orden.estado in [EstadoOrden.PAGADO, EstadoOrden.CANCELADA]:
         raise HTTPException(status_code=400, detail="No se pueden agregar productos a una orden cerrada o pagada.")
+
+    # Validar que si quien agrega ronda es un mesero, sea el mesero asignado
+    if request.usuario_id:
+        user = db.query(Usuario).filter(Usuario.id == request.usuario_id).first()
+        mesa_responsable_id = (orden.mesa.mesero_id if orden.mesa else None) or orden.mesero_id
+        if mesa_responsable_id and user and user.rol in [RolUsuario.MESERO, RolUsuario.AUXILIAR_GENERAL] and mesa_responsable_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Esta mesa está asignada a otro mesero. Solo el mesero responsable o jefatura pueden agregar rondas a esta orden."
+            )
 
     subtotal_adicional = Decimal("0.0")
 

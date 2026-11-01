@@ -18,9 +18,10 @@ export const useOrdenesStore = defineStore('ordenes', {
         this.cargando = false
       }
     },
-    async obtenerOrdenActivaMesa(mesaId) {
+    async obtenerOrdenActivaMesa(mesaId, usuarioId = null) {
       try {
-        const { data } = await api.get(`/ordenes/mesa/${mesaId}/activa`)
+        const params = usuarioId ? { usuario_id: usuarioId } : {}
+        const { data } = await api.get(`/ordenes/mesa/${mesaId}/activa`, { params })
         return data
       } catch (err) {
         console.error('Error obteniendo orden activa de la mesa:', err)
@@ -32,8 +33,12 @@ export const useOrdenesStore = defineStore('ordenes', {
       await this.cargarOrdenesActivas()
       return data
     },
-    async agregarItemsAOrden(ordenId, itemsData) {
-      const { data } = await api.post(`/ordenes/${ordenId}/items`, { items: itemsData })
+    async agregarItemsAOrden(ordenId, itemsData, usuarioId = null) {
+      const payload = { items: itemsData }
+      if (usuarioId) {
+        payload.usuario_id = usuarioId
+      }
+      const { data } = await api.post(`/ordenes/${ordenId}/items`, payload)
       await this.cargarOrdenesActivas()
       return data
     },

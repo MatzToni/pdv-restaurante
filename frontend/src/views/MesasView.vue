@@ -111,10 +111,12 @@
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border truncate max-w-full"
               :class="mesa.mesero_id === authStore.usuarioActual?.id
                 ? 'bg-eden-100 text-eden-800 dark:bg-eden-950/70 dark:text-eden-300 border-eden-300 dark:border-eden-800 font-bold'
-                : 'text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700/60'"
+                : (esRolAlto 
+                  ? 'text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700/60'
+                  : 'text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 font-semibold')"
               :title="'Mesero: ' + mesa.mesero_nombre"
             >
-              <span class="text-xs">🤵</span>
+              <span class="text-xs">{{ mesa.mesero_id === authStore.usuarioActual?.id ? '🤵' : (esRolAlto ? '🤵' : '🔒') }}</span>
               <span class="truncate">{{ mesa.mesero_id === authStore.usuarioActual?.id ? 'Tú (' + mesa.mesero_nombre + ')' : mesa.mesero_nombre }}</span>
             </span>
             <span v-else class="text-slate-400 dark:text-slate-500 font-normal text-2xs italic">
@@ -225,7 +227,7 @@
               <span>👋</span> Tomar Mesa
             </button>
             <button 
-              v-else-if="mesaSeleccionada.estado === 'libre' || esRolAlto"
+              v-else-if="!esMesaDeOtroMesero(mesaSeleccionada) && (mesaSeleccionada.estado === 'libre' || esRolAlto)"
               @click="desasignarMeseroMesa(mesaSeleccionada)"
               class="text-2xs font-bold text-rose-600 dark:text-rose-400 hover:underline px-2 py-1"
               title="Quitar mesero asignado"
@@ -253,8 +255,22 @@
           </div>
         </div>
 
-        <!-- Acciones Principales -->
-        <div class="space-y-2">
+        <!-- Aviso exclusivo si la mesa pertenece a otro mesero -->
+        <div 
+          v-if="esMesaDeOtroMesero(mesaSeleccionada)" 
+          class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-center space-y-2"
+        >
+          <div class="text-3xl">🔒</div>
+          <div class="font-extrabold text-amber-900 dark:text-amber-200 text-sm">
+            Mesa de otro mesero
+          </div>
+          <p class="text-xs text-amber-800 dark:text-amber-300">
+            Esta mesa está asignada a <strong>{{ mesaSeleccionada.mesero_nombre }}</strong>. Por políticas del restaurante, solo el mesero responsable o personal de jefatura pueden ver sus comandas y agregar rondas.
+          </p>
+        </div>
+
+        <!-- Acciones Principales (Solo para mesero responsable o roles de jefatura hacia arriba) -->
+        <div v-else class="space-y-2">
           <!-- Abrir Comandero -->
           <button 
             @click="abrirComandero(mesaSeleccionada)"
@@ -396,6 +412,12 @@ const mesasFiltradas = computed(() => {
 const esRolAlto = computed(() => {
   return ['administrador', 'gerente', 'jefe'].includes(authStore.rolActual)
 })
+
+const esMesaDeOtroMesero = (mesa) => {
+  if (!mesa || !mesa.mesero_id) return false
+  if (esRolAlto.value) return false
+  return mesa.mesero_id !== authStore.usuarioActual?.id
+}
 
 const conteoOcupadas = computed(() => {
   if (esRolAlto.value) {
@@ -626,6 +648,10 @@ const getAlertaMesa = (mesaId) => {
 }
 
 const abrirComandero = async (mesa) => {
+  if (esMesaDeOtroMesero(mesa)) {
+    alert(`Esta mesa está asignada a ${mesa.mesero_nombre || 'otro colaborador'}. No tienes permisos para ver sus comandas ni agregar rondas.`)
+    return
+  }
   const rol = authStore.rolActual
   if (!mesa.mesero_id && authStore.usuarioActual?.id && ['mesero', 'auxiliar_general', 'administrador'].includes(rol)) {
     try {
