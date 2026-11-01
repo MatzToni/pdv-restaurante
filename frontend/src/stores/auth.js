@@ -49,21 +49,19 @@ export const useAuthStore = defineStore('auth', {
         return []
       }
     },
-    async loginConPin(pin) {
-      // Si la lista de usuarios aún no está cargada, la solicitamos
-      if (this.usuarios.length === 0) {
-        await this.cargarUsuarios()
+    async loginConPin(pin, usuarioId = null) {
+      const payload = { pin: String(pin).trim() }
+      if (usuarioId) {
+        payload.usuario_id = usuarioId
       }
-      const usuarioEncontrado = this.usuarios.find(u => u.pin_seguridad === pin && u.activo)
-      if (!usuarioEncontrado) {
-        throw new Error('PIN incorrecto o usuario inactivo')
-      }
-      this.establecerSesion(usuarioEncontrado)
-      return usuarioEncontrado
+      const { data } = await api.post('/usuarios/login-pin', payload)
+      this.establecerSesion(data)
+      return data
     },
-    async loginConUsuario(usuario) {
-      this.establecerSesion(usuario)
-      return usuario
+    async loginConPassword(email, password) {
+      const { data } = await api.post('/usuarios/login-password', { email, password })
+      this.establecerSesion(data)
+      return data
     },
     establecerSesion(usuario) {
       this.usuarioActual = usuario

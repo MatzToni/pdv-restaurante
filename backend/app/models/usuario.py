@@ -58,6 +58,10 @@ class Usuario(Base):
     # Documentos del Personal
     documentos = relationship("DocumentoPersonal", back_populates="usuario", cascade="all, delete-orphan")
 
+    @property
+    def tiene_pin(self) -> bool:
+        return bool(self.pin_seguridad)
+
 class DocumentoPersonal(Base):
     __tablename__ = "documentos_personal"
 

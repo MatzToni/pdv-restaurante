@@ -28,7 +28,6 @@ class UsuarioBase(BaseModel):
     rol: RolUsuario = RolUsuario.MESERO
     turno: TurnoTrabajo = TurnoTrabajo.MATUTINO
     acceso_sistema: bool = True
-    pin_seguridad: Optional[str] = None
     activo: bool = True
     telefono: Optional[str] = None
     direccion: Optional[str] = None
@@ -42,6 +41,7 @@ class UsuarioBase(BaseModel):
     notas_expediente: Optional[str] = None
 
 class UsuarioCreate(UsuarioBase):
+    pin_seguridad: Optional[str] = None
     password: Optional[str] = "edencafe123"
 
 class UsuarioUpdate(BaseModel):
@@ -51,6 +51,7 @@ class UsuarioUpdate(BaseModel):
     turno: Optional[TurnoTrabajo] = None
     acceso_sistema: Optional[bool] = None
     pin_seguridad: Optional[str] = None
+    password: Optional[str] = None
     activo: Optional[bool] = None
     telefono: Optional[str] = None
     direccion: Optional[str] = None
@@ -66,6 +67,7 @@ class UsuarioUpdate(BaseModel):
 class UsuarioOut(UsuarioBase):
     id: int
     fecha_creacion: datetime
+    tiene_pin: bool = False
 
     class Config:
         from_attributes = True
@@ -78,3 +80,11 @@ class UsuarioDetalleOut(UsuarioOut):
 
 class UsuarioAuthPIN(BaseModel):
     pin: str
+
+class UsuarioLoginPIN(BaseModel):
+    pin: str
+    usuario_id: Optional[int] = None
+
+class UsuarioLoginPassword(BaseModel):
+    email: str
+    password: str

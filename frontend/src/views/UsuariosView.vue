@@ -96,7 +96,7 @@
               Turno: {{ u.turno }}
             </span>
 
-            <span v-if="u.pin_seguridad" class="text-2xs font-mono text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
+            <span v-if="u.tiene_pin" class="text-2xs font-mono text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
               PIN: ••••
             </span>
 

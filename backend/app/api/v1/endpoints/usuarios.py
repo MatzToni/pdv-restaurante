@@ -9,6 +9,8 @@ from app.schemas.usuario import (
     UsuarioCreate,
     UsuarioUpdate,
     UsuarioAuthPIN,
+    UsuarioLoginPIN,
+    UsuarioLoginPassword,
     DocumentoPersonalOut,
     DocumentoPersonalCreate
 )
@@ -130,3 +132,38 @@ def verificar_pin(auth: UsuarioAuthPIN, db: Session = Depends(get_db)):
     if not usuario:
         raise HTTPException(status_code=403, detail="PIN inválido o usuario sin permisos de autorización.")
     return {"valido": True, "autorizado_por": usuario.nombre, "rol": usuario.rol}
+
+@router.post("/login-pin", response_model=UsuarioOut, summary="Iniciar sesión validando PIN de 4 dígitos")
+def login_pin(credenciales: UsuarioLoginPIN, db: Session = Depends(get_db)):
+    pin_limpio = str(credenciales.pin).strip()
+    if not pin_limpio.isdigit() or len(pin_limpio) != 4:
+        raise HTTPException(status_code=400, detail="El PIN debe contener exactamente 4 dígitos numéricos.")
+
+    query = db.query(Usuario).filter(
+        Usuario.activo == True,
+        Usuario.acceso_sistema == True
+    )
+    if credenciales.usuario_id is not None:
+        usuario = query.filter(Usuario.id == credenciales.usuario_id).first()
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Colaborador no encontrado.")
+        if usuario.pin_seguridad != pin_limpio:
+            raise HTTPException(status_code=401, detail="PIN incorrecto para este perfil.")
+    else:
+        usuario = query.filter(Usuario.pin_seguridad == pin_limpio).first()
+        if not usuario:
+            raise HTTPException(status_code=401, detail="PIN no reconocido o colaborador sin acceso.")
+
+    return usuario
+
+@router.post("/login-password", response_model=UsuarioOut, summary="Iniciar sesión con correo y contraseña")
+def login_password(credenciales: UsuarioLoginPassword, db: Session = Depends(get_db)):
+    email_limpio = credenciales.email.strip().lower()
+    usuario = db.query(Usuario).filter(
+        Usuario.email.ilike(email_limpio),
+        Usuario.activo == True,
+        Usuario.acceso_sistema == True
+    ).first()
+    if not usuario or usuario.password_hash != credenciales.password:
+        raise HTTPException(status_code=401, detail="Correo electrónico o contraseña incorrectos.")
+    return usuario
