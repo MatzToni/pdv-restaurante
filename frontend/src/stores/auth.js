@@ -7,7 +7,7 @@ export const PERMISOS_POR_ROL = {
   jefe: ['mesas', 'pos', 'cocina', 'caja'],
   cocina: ['cocina'],
   mesero: ['mesas', 'pos'],
-  auxiliar_general: ['inventario']
+  auxiliar_general: ['mesas', 'pos', 'inventario']
 }
 
 // Ruta inicial por defecto según el rol del usuario

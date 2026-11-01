@@ -12,15 +12,22 @@
         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
           <span class="w-2 h-2 rounded-full bg-emerald-500"></span> {{ mesasStore.mesasLibres.length }} Libres
         </span>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">
-          <span class="w-2 h-2 rounded-full bg-amber-500"></span> {{ mesasStore.mesasOcupadas.length }} Ocupadas
+        <span 
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40"
+          :title="esRolAlto ? 'Total de mesas ocupadas' : `Mis mesas ocupadas (${conteoOcupadas} de ${mesasStore.mesasOcupadas.length} en total)`"
+        >
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span> {{ conteoOcupadas }} {{ esRolAlto ? 'Ocupadas' : 'Mis Ocupadas' }}
         </span>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40">
-          <span class="w-2 h-2 rounded-full bg-rose-500"></span> {{ mesasStore.mesasCuenta.length }} Por Cobrar
+        <span 
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40"
+          :title="esRolAlto ? 'Total de mesas por cobrar' : `Mis mesas por cobrar (${conteoCuenta} de ${mesasStore.mesasCuenta.length} en total)`"
+        >
+          <span class="w-2 h-2 rounded-full bg-rose-500"></span> {{ conteoCuenta }} {{ esRolAlto ? 'Por Cobrar' : 'Mis Por Cobrar' }}
         </span>
 
-        <!-- Botón crear mesa -->
+        <!-- Botón crear mesa (solo roles de jefe para arriba) -->
         <button 
+          v-if="esRolAlto"
           @click="modalNuevaMesa = true"
           class="px-3.5 py-1.5 bg-eden-600 hover:bg-eden-700 text-white rounded-xl text-xs font-bold shadow-sm transition active:scale-95 flex items-center gap-1.5"
         >
@@ -99,9 +106,16 @@
           </div>
 
           <div class="text-xs font-semibold my-1">
-            <span v-if="mesa.mesero_nombre" class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-200/80 dark:border-slate-700/60 truncate max-w-full" :title="'Mesero: ' + mesa.mesero_nombre">
+            <span 
+              v-if="mesa.mesero_nombre" 
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border truncate max-w-full"
+              :class="mesa.mesero_id === authStore.usuarioActual?.id
+                ? 'bg-eden-100 text-eden-800 dark:bg-eden-950/70 dark:text-eden-300 border-eden-300 dark:border-eden-800 font-bold'
+                : 'text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700/60'"
+              :title="'Mesero: ' + mesa.mesero_nombre"
+            >
               <span class="text-xs">🤵</span>
-              <span class="truncate">{{ mesa.mesero_nombre }}</span>
+              <span class="truncate">{{ mesa.mesero_id === authStore.usuarioActual?.id ? 'Tú (' + mesa.mesero_nombre + ')' : mesa.mesero_nombre }}</span>
             </span>
             <span v-else class="text-slate-400 dark:text-slate-500 font-normal text-2xs italic">
               Sin mesero
@@ -287,8 +301,9 @@
             <span>🪑</span> Liberar Mesa (Sin Consumo / Salieron)
           </button>
 
-          <!-- Opción de editar mesa completa -->
+          <!-- Opción de editar mesa completa (solo roles de jefe para arriba) -->
           <button 
+            v-if="esRolAlto"
             @click="abrirEditarMesa(mesaSeleccionada)"
             class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700"
           >
@@ -380,6 +395,20 @@ const mesasFiltradas = computed(() => {
 
 const esRolAlto = computed(() => {
   return ['administrador', 'gerente', 'jefe'].includes(authStore.rolActual)
+})
+
+const conteoOcupadas = computed(() => {
+  if (esRolAlto.value) {
+    return mesasStore.mesasOcupadas.length
+  }
+  return mesasStore.mesasOcupadas.filter(m => m.mesero_id === authStore.usuarioActual?.id).length
+})
+
+const conteoCuenta = computed(() => {
+  if (esRolAlto.value) {
+    return mesasStore.mesasCuenta.length
+  }
+  return mesasStore.mesasCuenta.filter(m => m.mesero_id === authStore.usuarioActual?.id).length
 })
 
 const colaboradoresAtencion = computed(() => {
