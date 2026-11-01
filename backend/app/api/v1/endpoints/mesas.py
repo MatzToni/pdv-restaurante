@@ -75,10 +75,13 @@ def actualizar_mesa(mesa_id: int, mesa_in: MesaUpdate, db: Session = Depends(get
         mesa.numero = mesa_in.numero
         
     if mesa_in.area_id is not None:
-        area = db.query(Area).filter(Area.id == mesa_in.area_id, Area.activo == True).first()
-        if not area:
-            raise HTTPException(status_code=404, detail="Área no encontrada.")
-        mesa.area_id = mesa_in.area_id
+        if mesa_in.area_id > 0:
+            area = db.query(Area).filter(Area.id == mesa_in.area_id, Area.activo == True).first()
+            if not area:
+                raise HTTPException(status_code=404, detail="Área no encontrada.")
+            mesa.area_id = mesa_in.area_id
+        else:
+            mesa.area_id = None
 
     if mesa_in.capacidad is not None:
         if mesa_in.capacidad < 1:
@@ -94,3 +97,14 @@ def actualizar_mesa(mesa_id: int, mesa_in: MesaUpdate, db: Session = Depends(get
     db.commit()
     db.refresh(mesa)
     return mesa
+
+@router.delete("/{mesa_id}", status_code=status.HTTP_200_OK, summary="Eliminar o desactivar una mesa")
+def eliminar_mesa(mesa_id: int, db: Session = Depends(get_db)):
+    mesa = db.query(Mesa).filter(Mesa.id == mesa_id).first()
+    if not mesa:
+        raise HTTPException(status_code=404, detail="Mesa no encontrada.")
+    if mesa.estado != EstadoMesa.LIBRE:
+        raise HTTPException(status_code=400, detail="No se puede eliminar una mesa que no está libre.")
+    mesa.activa = False
+    db.commit()
+    return {"mensaje": f"Mesa {mesa.numero} eliminada exitosamente"}

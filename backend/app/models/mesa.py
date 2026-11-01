@@ -22,8 +22,8 @@ class Mesa(Base):
     __tablename__ = "mesas"
 
     id = Column(Integer, primary_key=True, index=True)
-    numero = Column(String(20), unique=True, nullable=False) # ej. Mesa 1, Terraza 3, Barra 2
-    area_id = Column(Integer, ForeignKey("areas.id"), nullable=False)
+    numero = Column(String(100), unique=True, nullable=False) # ej. Mesa 1, Terraza 3, Barra 2
+    area_id = Column(Integer, ForeignKey("areas.id"), nullable=True)
     capacidad = Column(Integer, default=4, nullable=False)
     estado = Column(Enum(EstadoMesa), default=EstadoMesa.LIBRE, nullable=False)
     activa = Column(Boolean, default=True, nullable=False)

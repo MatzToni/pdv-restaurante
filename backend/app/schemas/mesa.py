@@ -17,7 +17,7 @@ class AreaOut(AreaBase):
 
 class MesaBase(BaseModel):
     numero: str
-    area_id: int
+    area_id: Optional[int] = None
     capacidad: int = 4
     estado: EstadoMesa = EstadoMesa.LIBRE
 

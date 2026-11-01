@@ -13,39 +13,14 @@
         sidebarExpandida ? 'w-64 p-3.5' : 'w-20 p-2.5 items-center'
       ]"
     >
-      <!-- Cabecera de Barra Lateral: Logo Redondo y Botón Retraer/Expandir -->
+      <!-- Cabecera de Barra Lateral: Logo Redondo con punto verde y botón Retraer/Expandir al lado -->
       <div class="w-full">
         <!-- Modo Expandido -->
-        <div v-if="sidebarExpandida" class="pb-3 mb-2 border-b border-white/50 dark:border-white/10">
-          <!-- Barra superior de control: Botón de contraer a la derecha -->
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-3xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 pl-1">
-              Edén Café PDV
-            </span>
-            <button
-              @click="alternarSidebar"
-              title="Contraer barra lateral"
-              class="rounded-xl p-1.5 bg-white/60 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-white/50 dark:border-white/10 shadow-xs transition-all active:scale-95 flex items-center justify-center shrink-0"
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                class="w-4 h-4" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                stroke-width="2.5" 
-                stroke-linecap="round" 
-                stroke-linejoin="round"
-              >
-                <polyline points="15 18 9 12 15 6"></polyline>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Logo redondo centrado y letras abajo del logo -->
-          <router-link to="/" class="flex flex-col items-center text-center group py-1">
-            <div class="relative mb-2">
-              <div class="w-20 h-20 rounded-full p-1 bg-white dark:bg-slate-800 border-2 border-white dark:border-white/20 shadow-md ring-2 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
+        <div v-if="sidebarExpandida" class="pb-3 mb-2 border-b border-white/50 dark:border-white/10 flex items-center justify-between px-2">
+          <!-- Logo redondo con punto verde (sin letras) -->
+          <router-link to="/" class="group flex items-center">
+            <div class="relative">
+              <div class="w-16 h-16 rounded-full p-1 bg-white dark:bg-slate-800 border-2 border-white dark:border-white/20 shadow-md ring-2 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <img 
                   src="/logo.png" 
                   alt="Edén Café Logo" 
@@ -54,22 +29,31 @@
               </div>
               <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
             </div>
-
-            <!-- Letras abajo del logo -->
-            <h1 class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight tracking-tight">
-              Edén Café
-            </h1>
-            <span class="text-3xs text-eden-700 dark:text-eden-400 font-semibold tracking-tight mt-0.5">
-              Comida Tradicional y Café
-            </span>
-            <span class="inline-flex items-center gap-1 text-3xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider mt-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/40">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> En línea
-            </span>
           </router-link>
+
+          <!-- Botón de contraer al lado del logo -->
+          <button
+            @click="alternarSidebar"
+            title="Contraer barra lateral"
+            class="rounded-xl p-2 bg-white/60 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-white/50 dark:border-white/10 shadow-xs transition-all active:scale-95 flex items-center justify-center shrink-0"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              class="w-4 h-4" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              stroke-width="2.5" 
+              stroke-linecap="round" 
+              stroke-linejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
         </div>
 
         <!-- Modo Contraído -->
-        <div v-else class="flex flex-col items-center gap-2 pb-3 mb-2 border-b border-white/50 dark:border-white/10">
+        <div v-else class="flex flex-col items-center gap-2.5 pb-3 mb-2 border-b border-white/50 dark:border-white/10">
           <router-link to="/" class="group">
             <div class="relative">
               <div class="w-12 h-12 rounded-full p-0.5 bg-white dark:bg-slate-800 border border-white dark:border-white/20 shadow-sm ring-1 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -390,26 +374,12 @@
         <aside 
           class="relative w-72 max-w-[85vw] h-full bg-white/85 dark:bg-slate-900/90 backdrop-blur-2xl border-r border-white/40 dark:border-white/10 p-5 flex flex-col justify-between shadow-2xl z-50 animate-in slide-in-from-left duration-250"
         >
-          <!-- Cabecera del Drawer -->
+          <!-- Cabecera del Drawer: Logo Redondo con punto verde y botón cerrar al lado -->
           <div>
-            <div class="flex items-center justify-between pb-2 mb-2 border-b border-white/50 dark:border-white/10">
-              <span class="text-3xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Edén Café PDV
-              </span>
-              <!-- Botón Cerrar Drawer -->
-              <button
-                @click="drawerMovilAbierto = false"
-                class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-sm active:scale-95 transition"
-                aria-label="Cerrar Menú"
-              >
-                ✕
-              </button>
-            </div>
-
-            <!-- Logo Redondo y Letras Abajo en Móvil -->
-            <div class="flex flex-col items-center text-center pb-3 mb-3 border-b border-white/50 dark:border-white/10">
-              <div class="relative mb-2">
-                <div class="w-20 h-20 rounded-full p-1 bg-white dark:bg-slate-800 border-2 border-white dark:border-white/20 shadow-md ring-2 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-white/50 dark:border-white/10">
+              <!-- Logo Redondo con punto verde -->
+              <div class="relative">
+                <div class="w-16 h-16 rounded-full p-1 bg-white dark:bg-slate-800 border-2 border-white dark:border-white/20 shadow-md ring-2 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center">
                   <img 
                     src="/logo.png" 
                     alt="Edén Café Logo" 
@@ -418,8 +388,15 @@
                 </div>
                 <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
               </div>
-              <h2 class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight">Edén Café</h2>
-              <span class="text-3xs text-eden-600 dark:text-eden-400 font-semibold">Comida Tradicional y Café</span>
+
+              <!-- Botón Cerrar Drawer al lado del logo -->
+              <button
+                @click="drawerMovilAbierto = false"
+                class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-sm active:scale-95 transition"
+                aria-label="Cerrar Menú"
+              >
+                ✕
+              </button>
             </div>
 
             <div class="px-2 mb-2 text-2xs font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">

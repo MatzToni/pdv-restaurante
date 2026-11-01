@@ -59,6 +59,10 @@ export const useMesasStore = defineStore('mesas', {
       }
       return data
     },
+    async eliminarMesa(mesaId) {
+      await api.delete(`/mesas/${mesaId}`)
+      this.mesas = this.mesas.filter(m => m.id !== mesaId)
+    },
     async actualizarEstado(mesaId, nuevoEstado) {
       return this.cambiarEstadoMesa(mesaId, nuevoEstado)
     }

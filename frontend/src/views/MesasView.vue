@@ -19,13 +19,12 @@
           <span class="w-2 h-2 rounded-full bg-rose-500"></span> {{ mesasStore.mesasCuenta.length }} Por Cobrar
         </span>
 
-        <!-- Botón crear mesa (solo visible para admin/gerente/jefe) -->
+        <!-- Botón crear mesa -->
         <button 
-          v-if="['administrador', 'gerente', 'jefe'].includes(authStore.rolActual)"
           @click="modalNuevaMesa = true"
-          class="px-3.5 py-1.5 bg-eden-600 hover:bg-eden-700 text-white rounded-xl text-xs font-bold shadow-sm transition active:scale-95"
+          class="px-3.5 py-1.5 bg-eden-600 hover:bg-eden-700 text-white rounded-xl text-xs font-bold shadow-sm transition active:scale-95 flex items-center gap-1.5"
         >
-          + Nueva Mesa
+          <span>+</span> Nueva Mesa
         </button>
       </div>
     </div>
@@ -36,64 +35,86 @@
       <p class="text-sm">Cargando mesas desde el servidor...</p>
     </div>
 
-    <!-- Grid de Mesas por Área -->
-    <div v-else class="space-y-8">
-      <div v-for="area in mesasPorArea" :key="area.id" class="space-y-3">
-        <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
-          <span>📍</span> {{ area.nombre }}
-          <span class="text-xs bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2 py-0.5 rounded-full">{{ area.mesas.length }}</span>
-        </h2>
+    <!-- Grid de Mesas -->
+    <div v-else class="space-y-4">
+      <!-- Selector / Filtro opcional si existen áreas -->
+      <div v-if="mesasStore.areas && mesasStore.areas.length > 0" class="flex flex-wrap items-center gap-2">
+        <button
+          @click="filtroArea = 'todas'"
+          :class="[
+            'px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95',
+            filtroArea === 'todas'
+              ? 'bg-eden-600 text-white shadow-xs'
+              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+          ]"
+        >
+          Todas ({{ mesasStore.mesas.length }})
+        </button>
+        <button
+          v-for="area in mesasStore.areas"
+          :key="area.id"
+          @click="filtroArea = area.id"
+          :class="[
+            'px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95',
+            filtroArea === area.id
+              ? 'bg-eden-600 text-white shadow-xs'
+              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+          ]"
+        >
+          {{ area.nombre }} ({{ mesasStore.mesas.filter(m => m.area_id === area.id).length }})
+        </button>
+      </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
-          <div 
-            v-for="mesa in area.mesas" 
-            :key="mesa.id"
-            @click="abrirOpcionesMesa(mesa)"
-            :class="[
-              'p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between min-h-[8.5rem] h-auto active:scale-95 shadow-sm',
-              mesa.estado === 'libre' ? 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500 hover:shadow-md' :
-              mesa.estado === 'ocupada' ? 'border-amber-400 dark:border-amber-600 bg-amber-50/70 dark:bg-amber-950/30 hover:border-amber-500' :
-              'border-rose-400 dark:border-rose-600 bg-rose-50/70 dark:bg-rose-950/30 hover:border-rose-500'
-            ]"
-          >
-            <div class="flex justify-between items-start">
-              <span class="font-bold text-base text-slate-800 dark:text-slate-100">{{ mesa.numero }}</span>
-              <div class="flex items-center gap-1.5">
-                <span v-if="getAlertaMesa(mesa.id)" 
-                  :class="[
-                    'text-3xs font-black px-1.5 py-0.5 rounded-full uppercase',
-                    getAlertaMesa(mesa.id).tipo === 'observacion' ? 'bg-amber-500 text-white animate-pulse' : 'bg-emerald-500 text-white'
-                  ]">
-                  {{ getAlertaMesa(mesa.id).texto }}
-                </span>
-                <span 
-                  :class="[
-                    'w-3 h-3 rounded-full',
-                    mesa.estado === 'libre' ? 'bg-emerald-500' :
-                    mesa.estado === 'ocupada' ? 'bg-amber-500' : 'bg-rose-500'
-                  ]"
-                ></span>
-              </div>
+      <!-- Cuadrícula unificada de Mesas -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
+        <div 
+          v-for="mesa in mesasFiltradas" 
+          :key="mesa.id"
+          @click="abrirOpcionesMesa(mesa)"
+          :class="[
+            'p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between min-h-[8.5rem] h-auto active:scale-95 shadow-sm',
+            mesa.estado === 'libre' ? 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-500 hover:shadow-md' :
+            mesa.estado === 'ocupada' ? 'border-amber-400 dark:border-amber-600 bg-amber-50/70 dark:bg-amber-950/30 hover:border-amber-500' :
+            'border-rose-400 dark:border-rose-600 bg-rose-50/70 dark:bg-rose-950/30 hover:border-rose-500'
+          ]"
+        >
+          <div class="flex justify-between items-start">
+            <span class="font-bold text-base text-slate-800 dark:text-slate-100">{{ mesa.numero }}</span>
+            <div class="flex items-center gap-1.5">
+              <span v-if="getAlertaMesa(mesa.id)" 
+                :class="[
+                  'text-3xs font-black px-1.5 py-0.5 rounded-full uppercase',
+                  getAlertaMesa(mesa.id).tipo === 'observacion' ? 'bg-amber-500 text-white animate-pulse' : 'bg-emerald-500 text-white'
+                ]">
+                {{ getAlertaMesa(mesa.id).texto }}
+              </span>
+              <span 
+                :class="[
+                  'w-3 h-3 rounded-full',
+                  mesa.estado === 'libre' ? 'bg-emerald-500' :
+                  mesa.estado === 'ocupada' ? 'bg-amber-500' : 'bg-rose-500'
+                ]"
+              ></span>
             </div>
+          </div>
 
-            <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              <span>Capacidad: {{ mesa.capacidad }} pers.</span>
-            </div>
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <span>Capacidad: {{ mesa.capacidad }} pers.</span>
+          </div>
 
-            <div class="text-xs font-bold capitalize flex justify-between items-center" :class="{
-              'text-emerald-600 dark:text-emerald-400': mesa.estado === 'libre',
-              'text-amber-600 dark:text-amber-400': mesa.estado === 'ocupada',
-              'text-rose-600 dark:text-rose-400': mesa.estado === 'cuenta'
-            }">
-              <span>{{ mesa.estado === 'cuenta' ? 'Por cobrar' : mesa.estado }}</span>
-              <span class="text-slate-400 font-normal">→</span>
-            </div>
+          <div class="text-xs font-bold capitalize flex justify-between items-center" :class="{
+            'text-emerald-600 dark:text-emerald-400': mesa.estado === 'libre',
+            'text-amber-600 dark:text-amber-400': mesa.estado === 'ocupada',
+            'text-rose-600 dark:text-rose-400': mesa.estado === 'cuenta'
+          }">
+            <span>{{ mesa.estado === 'cuenta' ? 'Por cobrar' : mesa.estado }}</span>
+            <span class="text-slate-400 font-normal">→</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal para Crear Nueva Mesa -->
+    <!-- Modal para Crear Nueva Mesa (sin requerir ubicación) -->
     <div v-if="modalNuevaMesa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
         <h3 class="text-lg font-black text-slate-800 dark:text-slate-100">Agregar Nueva Mesa</h3>
@@ -104,31 +125,35 @@
             <input 
               v-model="formMesa.numero" 
               type="text" 
-              placeholder="Ej. Mesa 7, Terraza 5" 
+              placeholder="Ej. Mesa 1, Mesa 7, Barra 2" 
               class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
             />
-          </div>
-
-          <div>
-            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Área / Salón</label>
-            <select 
-              v-model.number="formMesa.area_id" 
-              class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
-            >
-              <option v-for="area in mesasStore.areas" :key="area.id" :value="area.id">
-                {{ area.nombre }}
-              </option>
-            </select>
           </div>
 
           <div>
             <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Capacidad (Personas)</label>
-            <input 
-              v-model.number="formMesa.capacidad" 
-              type="number" 
-              min="1" 
-              class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
-            />
+            <div class="flex items-center gap-2 mt-1">
+              <button 
+                type="button"
+                @click="formMesa.capacidad = Math.max(1, (formMesa.capacidad || 1) - 1)"
+                class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-base active:scale-95 flex items-center justify-center border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+              >
+                −
+              </button>
+              <input 
+                v-model.number="formMesa.capacidad" 
+                type="number" 
+                min="1" 
+                class="flex-1 text-center p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-bold focus:outline-none focus:border-eden-600"
+              />
+              <button 
+                type="button"
+                @click="formMesa.capacidad = (formMesa.capacidad || 1) + 1"
+                class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-base active:scale-95 flex items-center justify-center border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
 
@@ -141,7 +166,7 @@
           </button>
           <button 
             @click="guardarMesa" 
-            :disabled="!formMesa.numero || !formMesa.area_id"
+            :disabled="!formMesa.numero || formMesa.capacidad < 1"
             class="flex-1 py-2.5 bg-eden-600 hover:bg-eden-700 disabled:opacity-50 text-white rounded-xl font-bold text-sm transition shadow-sm"
           >
             Crear Mesa
@@ -254,9 +279,8 @@
             <span>🟢</span> Marcar como Libre / Limpia
           </button>
 
-          <!-- Opción de editar mesa completa para administración -->
+          <!-- Opción de editar mesa completa -->
           <button 
-            v-if="['administrador', 'gerente', 'jefe'].includes(authStore.rolActual)"
             @click="abrirEditarMesa(mesaSeleccionada)"
             class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700"
           >
@@ -275,7 +299,7 @@
       </div>
     </div>
 
-    <!-- Modal para Editar Mesa Completa (Nombre, Área, Capacidad) -->
+    <!-- Modal para Editar Mesa Completa (sin requerir ubicación) -->
     <div v-if="modalEditarMesa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
         <h3 class="text-lg font-black text-slate-800 dark:text-slate-100">Editar Mesa</h3>
@@ -289,18 +313,6 @@
               placeholder="Ej. Mesa 1, Terraza 2" 
               class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
             />
-          </div>
-
-          <div>
-            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Área / Salón</label>
-            <select 
-              v-model.number="formEditarMesa.area_id" 
-              class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
-            >
-              <option v-for="area in mesasStore.areas" :key="area.id" :value="area.id">
-                {{ area.nombre }}
-              </option>
-            </select>
           </div>
 
           <div>
@@ -332,6 +344,14 @@
 
         <div class="flex gap-2 pt-2">
           <button 
+            v-if="mesaSeleccionada?.estado === 'libre'"
+            @click="confirmarEliminarMesa"
+            class="px-3 py-2.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 rounded-xl font-bold text-xs transition active:scale-95"
+            title="Eliminar esta mesa definitivamente"
+          >
+            🗑️ Eliminar
+          </button>
+          <button 
             @click="modalEditarMesa = false" 
             class="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-sm transition"
           >
@@ -339,10 +359,10 @@
           </button>
           <button 
             @click="guardarEdicionMesa" 
-            :disabled="!formEditarMesa.numero || !formEditarMesa.area_id || formEditarMesa.capacidad < 1"
+            :disabled="!formEditarMesa.numero || formEditarMesa.capacidad < 1"
             class="flex-1 py-2.5 bg-eden-600 hover:bg-eden-700 disabled:opacity-50 text-white rounded-xl font-bold text-sm transition shadow-sm"
           >
-            Guardar Cambios
+            Guardar
           </button>
         </div>
       </div>
@@ -366,10 +386,17 @@ const modalNuevaMesa = ref(false)
 const modalOpcionesMesa = ref(false)
 const modalEditarMesa = ref(false)
 const mesaSeleccionada = ref(null)
+const filtroArea = ref('todas')
+
+const mesasFiltradas = computed(() => {
+  if (filtroArea.value === 'todas') {
+    return mesasStore.mesas
+  }
+  return mesasStore.mesas.filter(m => m.area_id === Number(filtroArea.value))
+})
 
 const formMesa = ref({
   numero: '',
-  area_id: 1,
   capacidad: 4,
   estado: 'libre'
 })
@@ -377,7 +404,6 @@ const formMesa = ref({
 const formEditarMesa = ref({
   id: null,
   numero: '',
-  area_id: 1,
   capacidad: 4
 })
 
@@ -395,29 +421,56 @@ const abrirEditarMesa = (mesa) => {
   formEditarMesa.value = {
     id: mesa.id,
     numero: mesa.numero,
-    area_id: mesa.area_id,
     capacidad: mesa.capacidad
   }
   modalOpcionesMesa.value = false
   modalEditarMesa.value = true
 }
 
+const guardarMesa = async () => {
+  if (!formMesa.value.numero.trim()) return
+  try {
+    await mesasStore.crearMesa({
+      numero: formMesa.value.numero.trim(),
+      capacidad: formMesa.value.capacidad || 4,
+      estado: 'libre'
+    })
+    modalNuevaMesa.value = false
+    formMesa.value = { numero: '', capacidad: 4, estado: 'libre' }
+  } catch (err) {
+    console.error('Error al crear mesa:', err)
+    alert(err.response?.data?.detail || 'Error al crear la mesa.')
+  }
+}
+
 const guardarEdicionMesa = async () => {
+  if (!formEditarMesa.value.numero.trim()) return
   try {
     const data = await mesasStore.actualizarMesa(formEditarMesa.value.id, {
-      numero: formEditarMesa.value.numero,
-      area_id: formEditarMesa.value.area_id,
-      capacidad: formEditarMesa.value.capacidad
+      numero: formEditarMesa.value.numero.trim(),
+      capacidad: formEditarMesa.value.capacidad || 4
     })
     modalEditarMesa.value = false
     if (mesaSeleccionada.value && mesaSeleccionada.value.id === data.id) {
       mesaSeleccionada.value.numero = data.numero
-      mesaSeleccionada.value.area_id = data.area_id
       mesaSeleccionada.value.capacidad = data.capacidad
     }
   } catch (err) {
     console.error('Error al actualizar mesa:', err)
     alert(err.response?.data?.detail || 'Error al actualizar la mesa.')
+  }
+}
+
+const confirmarEliminarMesa = async () => {
+  if (!confirm(`¿Deseas eliminar la mesa "${formEditarMesa.value.numero}"?`)) return
+  try {
+    await mesasStore.eliminarMesa(formEditarMesa.value.id)
+    modalEditarMesa.value = false
+    modalOpcionesMesa.value = false
+    mesaSeleccionada.value = null
+  } catch (err) {
+    console.error('Error al eliminar mesa:', err)
+    alert(err.response?.data?.detail || 'Error al eliminar la mesa.')
   }
 }
 
@@ -485,27 +538,10 @@ const getAlertaMesa = (mesaId) => {
   return null
 }
 
-const mesasPorArea = computed(() => {
-  return mesasStore.areas.map(area => ({
-    ...area,
-    mesas: mesasStore.mesas.filter(m => m.area_id === area.id)
-  }))
-})
-
 const abrirComandero = (mesa) => {
   router.push({
     path: '/pos',
     query: { mesaId: mesa.id, mesaNumero: mesa.numero }
   })
-}
-
-const guardarMesa = async () => {
-  try {
-    await mesasStore.crearMesa(formMesa.value)
-    modalNuevaMesa.value = false
-    formMesa.value = { numero: '', area_id: mesasStore.areas[0]?.id || 1, capacidad: 4, estado: 'libre' }
-  } catch (err) {
-    alert('Error al crear la mesa.')
-  }
 }
 </script>
