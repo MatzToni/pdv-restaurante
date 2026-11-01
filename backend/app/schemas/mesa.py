@@ -27,6 +27,16 @@ class MesaCreate(MesaBase):
 class MesaUpdateEstado(BaseModel):
     estado: EstadoMesa
 
+class MesaUpdateCapacidad(BaseModel):
+    capacidad: int
+
+class MesaUpdate(BaseModel):
+    numero: Optional[str] = None
+    area_id: Optional[int] = None
+    capacidad: Optional[int] = None
+    estado: Optional[EstadoMesa] = None
+    activa: Optional[bool] = None
+
 class MesaOut(MesaBase):
     id: int
     activa: bool

@@ -170,6 +170,43 @@
           </span>
         </div>
 
+        <!-- Capacidad / Comensales (Editable al instante) -->
+        <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">👥</span>
+            <div>
+              <div class="text-xs font-bold text-slate-700 dark:text-slate-200">Personas / Capacidad</div>
+              <div class="text-3xs text-slate-400">Comensales sugeridos</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-1.5">
+            <button 
+              @click="ajustarCapacidad(mesaSeleccionada, -1)"
+              :disabled="mesaSeleccionada.capacidad <= 1"
+              class="w-9 h-9 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold text-base text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 disabled:opacity-40 active:scale-95 shadow-xs flex items-center justify-center transition"
+              title="Restar comensal"
+            >
+              −
+            </button>
+            <input 
+              type="number" 
+              min="1" 
+              max="99"
+              v-model.number="mesaSeleccionada.capacidad"
+              @change="guardarCapacidadDirecta(mesaSeleccionada)"
+              class="w-12 text-center text-sm font-black bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl py-1.5 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-eden-600"
+            />
+            <button 
+              @click="ajustarCapacidad(mesaSeleccionada, 1)"
+              class="w-9 h-9 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold text-base text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 active:scale-95 shadow-xs flex items-center justify-center transition"
+              title="Sumar comensal"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
         <!-- Acciones Principales -->
         <div class="space-y-2">
           <!-- Abrir Comandero -->
@@ -216,6 +253,15 @@
           >
             <span>🟢</span> Marcar como Libre / Limpia
           </button>
+
+          <!-- Opción de editar mesa completa para administración -->
+          <button 
+            v-if="['administrador', 'gerente', 'jefe'].includes(authStore.rolActual)"
+            @click="abrirEditarMesa(mesaSeleccionada)"
+            class="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700"
+          >
+            <span>⚙️</span> Editar Datos de la Mesa
+          </button>
         </div>
 
         <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
@@ -224,6 +270,79 @@
             class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700"
           >
             Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para Editar Mesa Completa (Nombre, Área, Capacidad) -->
+    <div v-if="modalEditarMesa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <h3 class="text-lg font-black text-slate-800 dark:text-slate-100">Editar Mesa</h3>
+        
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Nombre / Denominación</label>
+            <input 
+              v-model="formEditarMesa.numero" 
+              type="text" 
+              placeholder="Ej. Mesa 1, Terraza 2" 
+              class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
+            />
+          </div>
+
+          <div>
+            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Área / Salón</label>
+            <select 
+              v-model.number="formEditarMesa.area_id" 
+              class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
+            >
+              <option v-for="area in mesasStore.areas" :key="area.id" :value="area.id">
+                {{ area.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Capacidad (Personas)</label>
+            <div class="flex items-center gap-2 mt-1">
+              <button 
+                type="button"
+                @click="formEditarMesa.capacidad = Math.max(1, (formEditarMesa.capacidad || 1) - 1)"
+                class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-base active:scale-95 flex items-center justify-center border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+              >
+                −
+              </button>
+              <input 
+                v-model.number="formEditarMesa.capacidad" 
+                type="number" 
+                min="1" 
+                class="flex-1 text-center p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-bold focus:outline-none focus:border-eden-600"
+              />
+              <button 
+                type="button"
+                @click="formEditarMesa.capacidad = (formEditarMesa.capacidad || 1) + 1"
+                class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-base active:scale-95 flex items-center justify-center border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button 
+            @click="modalEditarMesa = false" 
+            class="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-sm transition"
+          >
+            Cancelar
+          </button>
+          <button 
+            @click="guardarEdicionMesa" 
+            :disabled="!formEditarMesa.numero || !formEditarMesa.area_id || formEditarMesa.capacidad < 1"
+            class="flex-1 py-2.5 bg-eden-600 hover:bg-eden-700 disabled:opacity-50 text-white rounded-xl font-bold text-sm transition shadow-sm"
+          >
+            Guardar Cambios
           </button>
         </div>
       </div>
@@ -245,6 +364,7 @@ const authStore = useAuthStore()
 
 const modalNuevaMesa = ref(false)
 const modalOpcionesMesa = ref(false)
+const modalEditarMesa = ref(false)
 const mesaSeleccionada = ref(null)
 
 const formMesa = ref({
@@ -252,6 +372,13 @@ const formMesa = ref({
   area_id: 1,
   capacidad: 4,
   estado: 'libre'
+})
+
+const formEditarMesa = ref({
+  id: null,
+  numero: '',
+  area_id: 1,
+  capacidad: 4
 })
 
 onMounted(() => {
@@ -262,6 +389,62 @@ onMounted(() => {
 const abrirOpcionesMesa = (mesa) => {
   mesaSeleccionada.value = mesa
   modalOpcionesMesa.value = true
+}
+
+const abrirEditarMesa = (mesa) => {
+  formEditarMesa.value = {
+    id: mesa.id,
+    numero: mesa.numero,
+    area_id: mesa.area_id,
+    capacidad: mesa.capacidad
+  }
+  modalOpcionesMesa.value = false
+  modalEditarMesa.value = true
+}
+
+const guardarEdicionMesa = async () => {
+  try {
+    const data = await mesasStore.actualizarMesa(formEditarMesa.value.id, {
+      numero: formEditarMesa.value.numero,
+      area_id: formEditarMesa.value.area_id,
+      capacidad: formEditarMesa.value.capacidad
+    })
+    modalEditarMesa.value = false
+    if (mesaSeleccionada.value && mesaSeleccionada.value.id === data.id) {
+      mesaSeleccionada.value.numero = data.numero
+      mesaSeleccionada.value.area_id = data.area_id
+      mesaSeleccionada.value.capacidad = data.capacidad
+    }
+  } catch (err) {
+    console.error('Error al actualizar mesa:', err)
+    alert(err.response?.data?.detail || 'Error al actualizar la mesa.')
+  }
+}
+
+const ajustarCapacidad = async (mesa, delta) => {
+  const nuevaCapacidad = (mesa.capacidad || 4) + delta
+  if (nuevaCapacidad < 1) return
+  const anterior = mesa.capacidad
+  mesa.capacidad = nuevaCapacidad
+  try {
+    await mesasStore.actualizarCapacidad(mesa.id, nuevaCapacidad)
+  } catch (err) {
+    mesa.capacidad = anterior
+    console.error('Error al actualizar capacidad:', err)
+    alert(err.response?.data?.detail || 'Error al actualizar la capacidad de la mesa.')
+  }
+}
+
+const guardarCapacidadDirecta = async (mesa) => {
+  if (!mesa.capacidad || mesa.capacidad < 1) {
+    mesa.capacidad = 1
+  }
+  try {
+    await mesasStore.actualizarCapacidad(mesa.id, mesa.capacidad)
+  } catch (err) {
+    console.error('Error al actualizar capacidad:', err)
+    alert(err.response?.data?.detail || 'Error al actualizar la capacidad de la mesa.')
+  }
 }
 
 const cambiarEstadoMesa = async (mesa, nuevoEstado) => {

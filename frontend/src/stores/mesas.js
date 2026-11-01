@@ -43,6 +43,22 @@ export const useMesasStore = defineStore('mesas', {
       }
       return data
     },
+    async actualizarCapacidad(mesaId, nuevaCapacidad) {
+      const { data } = await api.patch(`/mesas/${mesaId}/capacidad`, { capacidad: nuevaCapacidad })
+      const idx = this.mesas.findIndex(m => m.id === mesaId)
+      if (idx !== -1) {
+        this.mesas[idx].capacidad = data.capacidad
+      }
+      return data
+    },
+    async actualizarMesa(mesaId, mesaData) {
+      const { data } = await api.patch(`/mesas/${mesaId}`, mesaData)
+      const idx = this.mesas.findIndex(m => m.id === mesaId)
+      if (idx !== -1) {
+        this.mesas[idx] = { ...this.mesas[idx], ...data }
+      }
+      return data
+    },
     async actualizarEstado(mesaId, nuevoEstado) {
       return this.cambiarEstadoMesa(mesaId, nuevoEstado)
     }

@@ -13,13 +13,13 @@
         sidebarExpandida ? 'w-64 p-3.5' : 'w-20 p-2.5 items-center'
       ]"
     >
-      <!-- Cabecera de Barra Lateral: Logo Redondo, Letras Abajo y Botón Retraer/Expandir -->
+      <!-- Cabecera de Barra Lateral: Logo Redondo y Botón Retraer/Expandir -->
       <div class="w-full">
         <!-- Modo Expandido -->
         <div v-if="sidebarExpandida" class="pb-3 mb-2 border-b border-white/50 dark:border-white/10">
           <!-- Barra superior de control: Botón de contraer a la derecha -->
           <div class="flex items-center justify-between mb-1">
-            <span class="text-3xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 pl-1">
+            <span class="text-3xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 pl-1">
               Edén Café PDV
             </span>
             <button
@@ -42,27 +42,20 @@
             </button>
           </div>
 
-          <!-- Logo redondo centrado y letras abajo del logo -->
+          <!-- Logo redondo centrado (tamaño ampliado y sin cortes) -->
           <router-link to="/" class="flex flex-col items-center text-center group py-1">
-            <div class="relative mb-2">
-              <div class="w-16 h-16 rounded-full overflow-hidden p-1 bg-white/90 dark:bg-slate-800/90 border-2 border-white/80 dark:border-white/20 shadow-md flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div class="relative">
+              <div class="w-24 h-24 rounded-full p-2 bg-white/95 dark:bg-slate-800/90 border-2 border-white/80 dark:border-white/20 shadow-md flex items-center justify-center group-hover:scale-105 transition-transform">
                 <img 
                   src="/logo.png" 
                   alt="Edén Café Logo" 
-                  class="w-full h-full object-contain rounded-full"
+                  class="max-w-full max-h-full object-contain"
                 />
               </div>
-              <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+              <span class="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
             </div>
 
-            <!-- Letras abajo del logo -->
-            <h1 class="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight tracking-tight">
-              Edén Café
-            </h1>
-            <span class="text-3xs text-eden-700 dark:text-eden-400 font-extrabold tracking-tight mt-0.5">
-              Comida Tradicional y Café
-            </span>
-            <span class="inline-flex items-center gap-1 text-3xs text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider mt-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/40">
+            <span class="inline-flex items-center gap-1.5 text-3xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider mt-2 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/40">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> En línea
             </span>
           </router-link>
@@ -72,11 +65,11 @@
         <div v-else class="flex flex-col items-center gap-2 pb-3 mb-2 border-b border-white/50 dark:border-white/10">
           <router-link to="/" class="group">
             <div class="relative">
-              <div class="w-11 h-11 rounded-full overflow-hidden p-0.5 bg-white/90 dark:bg-slate-800/90 border border-white/80 dark:border-white/20 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div class="w-12 h-12 rounded-full p-1 bg-white/95 dark:bg-slate-800/90 border border-white/80 dark:border-white/20 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform">
                 <img 
                   src="/logo.png" 
                   alt="Edén Café Logo" 
-                  class="w-full h-full object-contain rounded-full"
+                  class="max-w-full max-h-full object-contain"
                 />
               </div>
               <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
@@ -104,7 +97,7 @@
         </div>
 
         <!-- Etiqueta de Sección (Expandida) -->
-        <div v-if="sidebarExpandida" class="px-2 mb-1.5 flex items-center justify-between text-2xs font-extrabold tracking-wider uppercase text-slate-400 dark:text-slate-500">
+        <div v-if="sidebarExpandida" class="px-2 mb-1.5 flex items-center justify-between text-2xs font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">
           <span>Módulos</span>
           <span class="text-3xs font-semibold text-emerald-600 dark:text-emerald-400 lowercase">en línea</span>
         </div>
@@ -121,7 +114,7 @@
           :class="[
             sidebarExpandida ? 'px-3.5 py-2.5 gap-3' : 'w-12 h-12 mx-auto justify-center',
             $route.path === item.path
-              ? 'bg-eden-600/15 dark:bg-eden-500/20 text-eden-800 dark:text-eden-200 font-extrabold border border-eden-500/30 shadow-[0_2px_12px_rgba(72,104,72,0.12)] backdrop-blur-md'
+              ? 'bg-eden-600/15 dark:bg-eden-500/20 text-eden-800 dark:text-eden-200 font-bold border border-eden-500/30 shadow-[0_2px_12px_rgba(72,104,72,0.12)] backdrop-blur-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5 active:scale-[0.98]'
           ]"
         >
@@ -137,7 +130,7 @@
           </span>
 
           <!-- Nombre del Módulo (Modo Expandido) -->
-          <span v-if="sidebarExpandida" class="text-xs font-bold truncate">
+          <span v-if="sidebarExpandida" class="text-xs font-semibold truncate">
             {{ item.nombre }}
           </span>
 
@@ -168,7 +161,7 @@
           title="Abrir Carta Digital de Clientes en nueva pestaña"
         >
           <span class="text-xl shrink-0 group-hover:scale-110 transition-transform">📖</span>
-          <span v-if="sidebarExpandida" class="text-xs font-bold truncate flex items-center justify-between flex-1">
+          <span v-if="sidebarExpandida" class="text-xs font-semibold truncate flex items-center justify-between flex-1">
             <span>Carta Clientes</span>
             <span class="text-2xs opacity-75">↗</span>
           </span>
@@ -199,7 +192,7 @@
         >
           <!-- Avatar con Inicial -->
           <div 
-            class="w-9 h-9 rounded-xl bg-gradient-to-br from-eden-500 to-eden-700 text-white flex items-center justify-center font-black text-xs shadow-sm ring-1 ring-white/60 dark:ring-white/10 shrink-0"
+            class="w-9 h-9 rounded-xl bg-gradient-to-br from-eden-500 to-eden-700 text-white flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-white/60 dark:ring-white/10 shrink-0"
           >
             {{ authStore.usuarioActual.nombre ? authStore.usuarioActual.nombre.charAt(0) : 'U' }}
           </div>
@@ -207,13 +200,13 @@
           <!-- Nombre y Rol (Modo Expandido) -->
           <div v-if="sidebarExpandida" class="min-w-0 flex-1">
             <div 
-              class="text-xs font-black text-slate-800 dark:text-slate-100 leading-snug break-words"
+              class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug break-words"
               :title="authStore.usuarioActual.nombre"
             >
               {{ authStore.usuarioActual.nombre }}
             </div>
             <div class="mt-1 flex items-center gap-1.5 flex-wrap">
-              <span class="text-3xs font-extrabold uppercase px-2 py-0.5 rounded-md bg-eden-100 dark:bg-eden-950/80 text-eden-700 dark:text-eden-400 tracking-wider">
+              <span class="text-3xs font-bold uppercase px-2 py-0.5 rounded-md bg-eden-100 dark:bg-eden-950/80 text-eden-700 dark:text-eden-400 tracking-wider">
                 {{ authStore.usuarioActual.rol }}
               </span>
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -340,10 +333,10 @@
             class="w-8 h-8 object-contain rounded-xl shadow-xs ring-1 ring-white/60 dark:ring-white/10"
           />
           <div>
-            <h1 class="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight tracking-tight">
+            <h1 class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight tracking-tight">
               {{ tituloVistaActual }}
             </h1>
-            <span class="text-3xs text-eden-600 dark:text-eden-400 font-bold block leading-none">
+            <span class="text-3xs text-eden-600 dark:text-eden-400 font-semibold block leading-none">
               Edén Café
             </span>
           </div>
@@ -364,7 +357,7 @@
 
         <div 
           v-if="authStore.usuarioActual"
-          class="w-9 h-9 rounded-xl bg-gradient-to-br from-eden-500 to-eden-700 text-white flex items-center justify-center font-black text-xs shadow-sm ring-1 ring-white/60 dark:ring-white/10"
+          class="w-9 h-9 rounded-xl bg-gradient-to-br from-eden-500 to-eden-700 text-white flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-white/60 dark:ring-white/10"
           :title="`${authStore.usuarioActual.nombre} (${authStore.usuarioActual.rol})`"
         >
           {{ authStore.usuarioActual.nombre ? authStore.usuarioActual.nombre.charAt(0) : 'U' }}
@@ -393,7 +386,7 @@
           <!-- Cabecera del Drawer -->
           <div>
             <div class="flex items-center justify-between pb-2 mb-2 border-b border-white/50 dark:border-white/10">
-              <span class="text-3xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+              <span class="text-3xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Edén Café PDV
               </span>
               <!-- Botón Cerrar Drawer -->
@@ -406,23 +399,24 @@
               </button>
             </div>
 
-            <!-- Logo Redondo y Letras Abajo en Móvil -->
+            <!-- Logo Redondo en Móvil (sin cortes) -->
             <div class="flex flex-col items-center text-center pb-3 mb-3 border-b border-white/50 dark:border-white/10">
-              <div class="relative mb-2">
-                <div class="w-16 h-16 rounded-full overflow-hidden p-1 bg-white/90 dark:bg-slate-800/90 border-2 border-white/80 dark:border-white/20 shadow-md flex items-center justify-center">
+              <div class="relative mb-1">
+                <div class="w-20 h-20 rounded-full p-2 bg-white/95 dark:bg-slate-800/90 border-2 border-white/80 dark:border-white/20 shadow-md flex items-center justify-center">
                   <img 
                     src="/logo.png" 
                     alt="Edén Café Logo" 
-                    class="w-full h-full object-contain rounded-full"
+                    class="max-w-full max-h-full object-contain"
                   />
                 </div>
-                <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+                <span class="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
               </div>
-              <h2 class="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight">Edén Café</h2>
-              <span class="text-3xs text-eden-600 dark:text-eden-400 font-bold">Comida Tradicional y Café</span>
+              <span class="inline-flex items-center gap-1.5 text-3xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider mt-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/40">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> En línea
+              </span>
             </div>
 
-            <div class="px-2 mb-2 text-2xs font-extrabold tracking-wider uppercase text-slate-400 dark:text-slate-500">
+            <div class="px-2 mb-2 text-2xs font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">
               Módulos del Sistema
             </div>
 
@@ -433,10 +427,10 @@
                 :key="item.path"
                 :to="item.path"
                 @click="drawerMovilAbierto = false"
-                class="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold transition active:scale-[0.98]"
+                class="flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-semibold transition active:scale-[0.98]"
                 :class="[
                   $route.path === item.path
-                    ? 'bg-eden-600/15 dark:bg-eden-500/20 text-eden-800 dark:text-eden-200 border border-eden-500/30 shadow-xs'
+                    ? 'bg-eden-600/15 dark:bg-eden-500/20 text-eden-800 dark:text-eden-200 font-bold border border-eden-500/30 shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-white/5'
                 ]"
               >
@@ -449,7 +443,7 @@
                 to="/carta"
                 target="_blank"
                 @click="drawerMovilAbierto = false"
-                class="flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-bold text-eden-700 dark:text-eden-400 bg-eden-50/70 dark:bg-eden-950/40 border border-eden-200/60 dark:border-eden-800/40 mt-3"
+                class="flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-semibold text-eden-700 dark:text-eden-400 bg-eden-50/70 dark:bg-eden-950/40 border border-eden-200/60 dark:border-eden-800/40 mt-3"
               >
                 <div class="flex items-center gap-3">
                   <span class="text-xl">📖</span>
@@ -467,15 +461,15 @@
               v-if="authStore.usuarioActual" 
               class="p-3 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-white/60 dark:border-white/10 shadow-xs flex items-center gap-3"
             >
-              <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-eden-500 to-eden-700 text-white flex items-center justify-center font-black text-sm shadow-sm ring-1 ring-white/60 dark:ring-white/10 shrink-0">
+              <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-eden-500 to-eden-700 text-white flex items-center justify-center font-bold text-sm shadow-sm ring-1 ring-white/60 dark:ring-white/10 shrink-0">
                 {{ authStore.usuarioActual.nombre ? authStore.usuarioActual.nombre.charAt(0) : 'U' }}
               </div>
               <div class="min-w-0 flex-1">
-                <div class="text-xs font-black text-slate-800 dark:text-slate-100 leading-snug break-words">
+                <div class="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug break-words">
                   {{ authStore.usuarioActual.nombre }}
                 </div>
                 <div class="mt-1">
-                  <span class="text-3xs font-extrabold uppercase px-2 py-0.5 rounded-md bg-eden-100 dark:bg-eden-950/80 text-eden-700 dark:text-eden-400 inline-block">
+                  <span class="text-3xs font-bold uppercase px-2 py-0.5 rounded-md bg-eden-100 dark:bg-eden-950/80 text-eden-700 dark:text-eden-400 inline-block">
                     {{ authStore.usuarioActual.rol }}
                   </span>
                 </div>

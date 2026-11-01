@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
 from app.models.mesa import Mesa, Area, EstadoMesa
-from app.schemas.mesa import MesaOut, MesaCreate, MesaUpdateEstado, AreaOut, AreaCreate
+from app.schemas.mesa import MesaOut, MesaCreate, MesaUpdateEstado, MesaUpdateCapacidad, MesaUpdate, AreaOut, AreaCreate
 
 router = APIRouter()
 
@@ -46,6 +46,51 @@ def actualizar_estado_mesa(mesa_id: int, estado_in: MesaUpdateEstado, db: Sessio
     if not mesa:
         raise HTTPException(status_code=404, detail="Mesa no encontrada.")
     mesa.estado = estado_in.estado
+    db.commit()
+    db.refresh(mesa)
+    return mesa
+
+@router.patch("/{mesa_id}/capacidad", response_model=MesaOut, summary="Actualizar capacidad de una mesa")
+def actualizar_capacidad_mesa(mesa_id: int, cap_in: MesaUpdateCapacidad, db: Session = Depends(get_db)):
+    if cap_in.capacidad < 1:
+        raise HTTPException(status_code=400, detail="La capacidad debe ser de al menos 1 persona.")
+    mesa = db.query(Mesa).filter(Mesa.id == mesa_id).first()
+    if not mesa:
+        raise HTTPException(status_code=404, detail="Mesa no encontrada.")
+    mesa.capacidad = cap_in.capacidad
+    db.commit()
+    db.refresh(mesa)
+    return mesa
+
+@router.patch("/{mesa_id}", response_model=MesaOut, summary="Actualizar datos de una mesa")
+def actualizar_mesa(mesa_id: int, mesa_in: MesaUpdate, db: Session = Depends(get_db)):
+    mesa = db.query(Mesa).filter(Mesa.id == mesa_id).first()
+    if not mesa:
+        raise HTTPException(status_code=404, detail="Mesa no encontrada.")
+    
+    if mesa_in.numero is not None and mesa_in.numero != mesa.numero:
+        existente = db.query(Mesa).filter(Mesa.numero == mesa_in.numero, Mesa.id != mesa_id).first()
+        if existente:
+            raise HTTPException(status_code=400, detail="Ya existe una mesa con esa denominación.")
+        mesa.numero = mesa_in.numero
+        
+    if mesa_in.area_id is not None:
+        area = db.query(Area).filter(Area.id == mesa_in.area_id, Area.activo == True).first()
+        if not area:
+            raise HTTPException(status_code=404, detail="Área no encontrada.")
+        mesa.area_id = mesa_in.area_id
+
+    if mesa_in.capacidad is not None:
+        if mesa_in.capacidad < 1:
+            raise HTTPException(status_code=400, detail="La capacidad debe ser de al menos 1 persona.")
+        mesa.capacidad = mesa_in.capacidad
+
+    if mesa_in.estado is not None:
+        mesa.estado = mesa_in.estado
+
+    if mesa_in.activa is not None:
+        mesa.activa = mesa_in.activa
+
     db.commit()
     db.refresh(mesa)
     return mesa
