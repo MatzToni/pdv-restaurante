@@ -42,20 +42,27 @@
             </button>
           </div>
 
-          <!-- Logo redondo centrado (tamaño ampliado y sin cortes) -->
+          <!-- Logo redondo centrado y letras abajo del logo -->
           <router-link to="/" class="flex flex-col items-center text-center group py-1">
-            <div class="relative">
-              <div class="w-24 h-24 rounded-full p-2 bg-white/95 dark:bg-slate-800/90 border-2 border-white/80 dark:border-white/20 shadow-md flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div class="relative mb-2">
+              <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden p-1.5 bg-white/95 dark:bg-slate-800/90 border-2 border-white/80 dark:border-white/20 shadow-md flex items-center justify-center group-hover:scale-105 transition-transform">
                 <img 
                   src="/logo.png" 
                   alt="Edén Café Logo" 
-                  class="max-w-full max-h-full object-contain"
+                  class="w-full h-full object-contain"
                 />
               </div>
-              <span class="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+              <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
             </div>
 
-            <span class="inline-flex items-center gap-1.5 text-3xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider mt-2 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/40">
+            <!-- Letras abajo del logo -->
+            <h1 class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight tracking-tight">
+              Edén Café
+            </h1>
+            <span class="text-3xs text-eden-700 dark:text-eden-400 font-semibold tracking-tight mt-0.5">
+              Comida Tradicional y Café
+            </span>
+            <span class="inline-flex items-center gap-1 text-3xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider mt-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/40">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> En línea
             </span>
           </router-link>
@@ -65,11 +72,11 @@
         <div v-else class="flex flex-col items-center gap-2 pb-3 mb-2 border-b border-white/50 dark:border-white/10">
           <router-link to="/" class="group">
             <div class="relative">
-              <div class="w-12 h-12 rounded-full p-1 bg-white/95 dark:bg-slate-800/90 border border-white/80 dark:border-white/20 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div class="w-12 h-12 rounded-full overflow-hidden p-1 bg-white/95 dark:bg-slate-800/90 border border-white/80 dark:border-white/20 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform">
                 <img 
                   src="/logo.png" 
                   alt="Edén Café Logo" 
-                  class="max-w-full max-h-full object-contain"
+                  class="w-full h-full object-contain"
                 />
               </div>
               <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
@@ -399,21 +406,20 @@
               </button>
             </div>
 
-            <!-- Logo Redondo en Móvil (sin cortes) -->
+            <!-- Logo Redondo y Letras Abajo en Móvil -->
             <div class="flex flex-col items-center text-center pb-3 mb-3 border-b border-white/50 dark:border-white/10">
-              <div class="relative mb-1">
-                <div class="w-20 h-20 rounded-full p-2 bg-white/95 dark:bg-slate-800/90 border-2 border-white/80 dark:border-white/20 shadow-md flex items-center justify-center">
+              <div class="relative mb-2">
+                <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden p-1.5 bg-white/95 dark:bg-slate-800/90 border-2 border-white/80 dark:border-white/20 shadow-md flex items-center justify-center">
                   <img 
                     src="/logo.png" 
                     alt="Edén Café Logo" 
-                    class="max-w-full max-h-full object-contain"
+                    class="w-full h-full object-contain"
                   />
                 </div>
-                <span class="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+                <span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
               </div>
-              <span class="inline-flex items-center gap-1.5 text-3xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider mt-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/40">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> En línea
-              </span>
+              <h2 class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight">Edén Café</h2>
+              <span class="text-3xs text-eden-600 dark:text-eden-400 font-semibold">Comida Tradicional y Café</span>
             </div>
 
             <div class="px-2 mb-2 text-2xs font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">
