@@ -59,6 +59,14 @@ export const useMesasStore = defineStore('mesas', {
       }
       return data
     },
+    async asignarMesero(mesaId, meseroId) {
+      const { data } = await api.patch(`/mesas/${mesaId}/mesero`, { mesero_id: meseroId })
+      const idx = this.mesas.findIndex(m => m.id === mesaId)
+      if (idx !== -1) {
+        this.mesas[idx] = { ...this.mesas[idx], ...data }
+      }
+      return data
+    },
     async eliminarMesa(mesaId) {
       await api.delete(`/mesas/${mesaId}`)
       this.mesas = this.mesas.filter(m => m.id !== mesaId)

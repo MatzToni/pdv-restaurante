@@ -1,9 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from app.db.session import get_db
 from app.models.mesa import Mesa, Area, EstadoMesa
-from app.schemas.mesa import MesaOut, MesaCreate, MesaUpdateEstado, MesaUpdateCapacidad, MesaUpdate, AreaOut, AreaCreate
+from app.models.usuario import Usuario
+from app.schemas.mesa import (
+    MesaOut,
+    MesaCreate,
+    MesaUpdateEstado,
+    MesaUpdateCapacidad,
+    MesaAsignarMesero,
+    MesaUpdate,
+    AreaOut,
+    AreaCreate
+)
 
 router = APIRouter()
 
@@ -21,7 +31,10 @@ def crear_area(area_in: AreaCreate, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[MesaOut], summary="Listar todas las mesas activas")
 def listar_mesas(db: Session = Depends(get_db)):
-    return db.query(Mesa).filter(Mesa.activa == True).order_by(Mesa.id).all()
+    return db.query(Mesa).options(
+        joinedload(Mesa.mesero),
+        joinedload(Mesa.area)
+    ).filter(Mesa.activa == True).order_by(Mesa.id).all()
 
 @router.post("/", response_model=MesaOut, status_code=status.HTTP_201_CREATED, summary="Crear una nueva mesa")
 def crear_mesa(mesa_in: MesaCreate, db: Session = Depends(get_db)):
@@ -32,8 +45,9 @@ def crear_mesa(mesa_in: MesaCreate, db: Session = Depends(get_db)):
     nueva_mesa = Mesa(
         numero=mesa_in.numero,
         area_id=mesa_in.area_id,
-        capacidad=mesa_in.capacidad,
-        estado=mesa_in.estado
+        mesero_id=mesa_in.mesero_id,
+        capacidad=mesa_in.capacidad or 4,
+        estado=mesa_in.estado or EstadoMesa.LIBRE
     )
     db.add(nueva_mesa)
     db.commit()
@@ -45,7 +59,27 @@ def actualizar_estado_mesa(mesa_id: int, estado_in: MesaUpdateEstado, db: Sessio
     mesa = db.query(Mesa).filter(Mesa.id == mesa_id).first()
     if not mesa:
         raise HTTPException(status_code=404, detail="Mesa no encontrada.")
+    if estado_in.estado == EstadoMesa.LIBRE:
+        mesa.mesero_id = None
     mesa.estado = estado_in.estado
+    db.commit()
+    db.refresh(mesa)
+    return mesa
+
+@router.patch("/{mesa_id}/mesero", response_model=MesaOut, summary="Asignar o desasignar mesero a una mesa")
+def asignar_mesero_mesa(mesa_id: int, datos: MesaAsignarMesero, db: Session = Depends(get_db)):
+    mesa = db.query(Mesa).filter(Mesa.id == mesa_id).first()
+    if not mesa:
+        raise HTTPException(status_code=404, detail="Mesa no encontrada.")
+    if datos.mesero_id is not None:
+        mesero = db.query(Usuario).filter(Usuario.id == datos.mesero_id, Usuario.activo == True).first()
+        if not mesero:
+            raise HTTPException(status_code=404, detail="Mesero o colaborador no encontrado.")
+        mesa.mesero_id = datos.mesero_id
+        if mesa.estado == EstadoMesa.LIBRE:
+            mesa.estado = EstadoMesa.OCUPADA
+    else:
+        mesa.mesero_id = None
     db.commit()
     db.refresh(mesa)
     return mesa
@@ -88,7 +122,12 @@ def actualizar_mesa(mesa_id: int, mesa_in: MesaUpdate, db: Session = Depends(get
             raise HTTPException(status_code=400, detail="La capacidad debe ser de al menos 1 persona.")
         mesa.capacidad = mesa_in.capacidad
 
+    if "mesero_id" in mesa_in.model_fields_set:
+        mesa.mesero_id = mesa_in.mesero_id
+
     if mesa_in.estado is not None:
+        if mesa_in.estado == EstadoMesa.LIBRE:
+            mesa.mesero_id = None
         mesa.estado = mesa_in.estado
 
     if mesa_in.activa is not None:

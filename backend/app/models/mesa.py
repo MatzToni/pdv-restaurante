@@ -24,9 +24,15 @@ class Mesa(Base):
     id = Column(Integer, primary_key=True, index=True)
     numero = Column(String(100), unique=True, nullable=False) # ej. Mesa 1, Terraza 3, Barra 2
     area_id = Column(Integer, ForeignKey("areas.id"), nullable=True)
-    capacidad = Column(Integer, default=4, nullable=False)
+    mesero_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True) # Mesero asignado a la mesa
+    capacidad = Column(Integer, default=4, nullable=True)
     estado = Column(Enum(EstadoMesa), default=EstadoMesa.LIBRE, nullable=False)
     activa = Column(Boolean, default=True, nullable=False)
 
     area = relationship("Area", back_populates="mesas")
+    mesero = relationship("Usuario")
     ordenes = relationship("Orden", back_populates="mesa")
+
+    @property
+    def mesero_nombre(self):
+        return self.mesero.nombre if self.mesero else None

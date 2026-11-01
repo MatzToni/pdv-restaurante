@@ -110,8 +110,9 @@ def crear_orden(orden_in: OrdenCreate, db: Session = Depends(get_db)):
     nueva_orden.subtotal = subtotal_acumulado
     nueva_orden.total = subtotal_acumulado
 
-    # Marcar mesa como ocupada
+    # Marcar mesa como ocupada y asignar mesero que tomó la comanda
     mesa.estado = EstadoMesa.OCUPADA
+    mesa.mesero_id = orden_in.mesero_id
 
     db.commit()
     db.refresh(nueva_orden)

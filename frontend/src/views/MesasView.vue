@@ -98,8 +98,14 @@
             </div>
           </div>
 
-          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            <span>Capacidad: {{ mesa.capacidad }} pers.</span>
+          <div class="text-xs font-semibold my-1">
+            <span v-if="mesa.mesero_nombre" class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-200/80 dark:border-slate-700/60 truncate max-w-full" :title="'Mesero: ' + mesa.mesero_nombre">
+              <span class="text-xs">🤵</span>
+              <span class="truncate">{{ mesa.mesero_nombre }}</span>
+            </span>
+            <span v-else class="text-slate-400 dark:text-slate-500 font-normal text-2xs italic">
+              Sin mesero
+            </span>
           </div>
 
           <div class="text-xs font-bold capitalize flex justify-between items-center" :class="{
@@ -114,7 +120,7 @@
       </div>
     </div>
 
-    <!-- Modal para Crear Nueva Mesa (sin requerir ubicación) -->
+    <!-- Modal para Crear Nueva Mesa -->
     <div v-if="modalNuevaMesa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
         <h3 class="text-lg font-black text-slate-800 dark:text-slate-100">Agregar Nueva Mesa</h3>
@@ -127,33 +133,9 @@
               type="text" 
               placeholder="Ej. Mesa 1, Mesa 7, Barra 2" 
               class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
+              @keyup.enter="guardarMesa"
+              autofocus
             />
-          </div>
-
-          <div>
-            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Capacidad (Personas)</label>
-            <div class="flex items-center gap-2 mt-1">
-              <button 
-                type="button"
-                @click="formMesa.capacidad = Math.max(1, (formMesa.capacidad || 1) - 1)"
-                class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-base active:scale-95 flex items-center justify-center border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
-              >
-                −
-              </button>
-              <input 
-                v-model.number="formMesa.capacidad" 
-                type="number" 
-                min="1" 
-                class="flex-1 text-center p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-bold focus:outline-none focus:border-eden-600"
-              />
-              <button 
-                type="button"
-                @click="formMesa.capacidad = (formMesa.capacidad || 1) + 1"
-                class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-base active:scale-95 flex items-center justify-center border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
-              >
-                +
-              </button>
-            </div>
           </div>
         </div>
 
@@ -166,7 +148,7 @@
           </button>
           <button 
             @click="guardarMesa" 
-            :disabled="!formMesa.numero || formMesa.capacidad < 1"
+            :disabled="!formMesa.numero?.trim()"
             class="flex-1 py-2.5 bg-eden-600 hover:bg-eden-700 disabled:opacity-50 text-white rounded-xl font-bold text-sm transition shadow-sm"
           >
             Crear Mesa
@@ -178,11 +160,8 @@
     <!-- Modal Opciones de Mesa (Ciclo de Vida: Libre -> Ocupada -> Por Cobrar -> Libre) -->
     <div v-if="modalOpcionesMesa && mesaSeleccionada" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-        <div class="flex justify-between items-start border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div>
-            <h3 class="text-xl font-black text-slate-800 dark:text-slate-100">{{ mesaSeleccionada.numero }}</h3>
-            <span class="text-xs text-slate-400">Capacidad: {{ mesaSeleccionada.capacidad }} personas</span>
-          </div>
+        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+          <h3 class="text-xl font-black text-slate-800 dark:text-slate-100">{{ mesaSeleccionada.numero }}</h3>
           <span 
             :class="[
               'text-xs font-black px-2.5 py-1 rounded-full uppercase',
@@ -195,40 +174,64 @@
           </span>
         </div>
 
-        <!-- Capacidad / Comensales (Editable al instante) -->
-        <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">👥</span>
-            <div>
-              <div class="text-xs font-bold text-slate-700 dark:text-slate-200">Personas / Capacidad</div>
-              <div class="text-3xs text-slate-400">Comensales sugeridos</div>
+        <!-- Información de Mesero Asignado / Tomar Mesa -->
+        <div 
+          class="p-3.5 rounded-2xl border transition-colors"
+          :class="mesaSeleccionada.mesero_nombre
+            ? 'bg-eden-50/70 dark:bg-eden-950/30 border-eden-200 dark:border-eden-800/60'
+            : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-700/60'"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div 
+                class="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
+                :class="mesaSeleccionada.mesero_nombre ? 'bg-eden-100 dark:bg-eden-900/60' : 'bg-slate-200 dark:bg-slate-700'"
+              >
+                🤵
+              </div>
+              <div>
+                <div 
+                  class="text-3xs font-extrabold uppercase tracking-wider"
+                  :class="mesaSeleccionada.mesero_nombre ? 'text-eden-800 dark:text-eden-300' : 'text-slate-400'"
+                >
+                  Mesero Asignado
+                </div>
+                <div class="text-sm font-bold text-slate-800 dark:text-slate-100">
+                  {{ mesaSeleccionada.mesero_nombre || 'Sin mesero asignado' }}
+                </div>
+              </div>
             </div>
+
+            <!-- Botón Tomar Mesa si no tiene o Desasignar si está libre -->
+            <button 
+              v-if="!mesaSeleccionada.mesero_id"
+              @click="tomarMesaAsignarAMi(mesaSeleccionada)"
+              class="px-3 py-1.5 bg-eden-600 hover:bg-eden-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition"
+            >
+              Tomar Mesa
+            </button>
+            <button 
+              v-else-if="mesaSeleccionada.estado === 'libre'"
+              @click="desasignarMeseroMesa(mesaSeleccionada)"
+              class="text-2xs font-bold text-rose-600 dark:text-rose-400 hover:underline px-2 py-1"
+            >
+              Desasignar
+            </button>
           </div>
-          
-          <div class="flex items-center gap-1.5">
-            <button 
-              @click="ajustarCapacidad(mesaSeleccionada, -1)"
-              :disabled="mesaSeleccionada.capacidad <= 1"
-              class="w-9 h-9 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold text-base text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 disabled:opacity-40 active:scale-95 shadow-xs flex items-center justify-center transition"
-              title="Restar comensal"
+
+          <!-- Selector de mesero alternativo (si hay colaboradores registrados) -->
+          <div v-if="colaboradoresMeseros.length > 0" class="mt-2.5 pt-2.5 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-2">
+            <span class="text-2xs text-slate-500 dark:text-slate-400 font-semibold shrink-0">Asignar a:</span>
+            <select 
+              :value="mesaSeleccionada.mesero_id || ''"
+              @change="cambiarMeseroDirecto(mesaSeleccionada, $event.target.value)"
+              class="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-eden-600"
             >
-              −
-            </button>
-            <input 
-              type="number" 
-              min="1" 
-              max="99"
-              v-model.number="mesaSeleccionada.capacidad"
-              @change="guardarCapacidadDirecta(mesaSeleccionada)"
-              class="w-12 text-center text-sm font-black bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl py-1.5 text-slate-800 dark:text-slate-100 focus:outline-none focus:border-eden-600"
-            />
-            <button 
-              @click="ajustarCapacidad(mesaSeleccionada, 1)"
-              class="w-9 h-9 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold text-base text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 active:scale-95 shadow-xs flex items-center justify-center transition"
-              title="Sumar comensal"
-            >
-              +
-            </button>
+              <option value="">-- Sin asignar --</option>
+              <option v-for="colab in colaboradoresMeseros" :key="colab.id" :value="colab.id">
+                {{ colab.nombre }} ({{ colab.rol }})
+              </option>
+            </select>
           </div>
         </div>
 
@@ -312,33 +315,8 @@
               type="text" 
               placeholder="Ej. Mesa 1, Terraza 2" 
               class="w-full mt-1 p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-semibold focus:outline-none focus:border-eden-600"
+              @keyup.enter="guardarEdicionMesa"
             />
-          </div>
-
-          <div>
-            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Capacidad (Personas)</label>
-            <div class="flex items-center gap-2 mt-1">
-              <button 
-                type="button"
-                @click="formEditarMesa.capacidad = Math.max(1, (formEditarMesa.capacidad || 1) - 1)"
-                class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-base active:scale-95 flex items-center justify-center border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
-              >
-                −
-              </button>
-              <input 
-                v-model.number="formEditarMesa.capacidad" 
-                type="number" 
-                min="1" 
-                class="flex-1 text-center p-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl text-sm font-bold focus:outline-none focus:border-eden-600"
-              />
-              <button 
-                type="button"
-                @click="formEditarMesa.capacidad = (formEditarMesa.capacidad || 1) + 1"
-                class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-base active:scale-95 flex items-center justify-center border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
-              >
-                +
-              </button>
-            </div>
           </div>
         </div>
 
@@ -359,7 +337,7 @@
           </button>
           <button 
             @click="guardarEdicionMesa" 
-            :disabled="!formEditarMesa.numero || formEditarMesa.capacidad < 1"
+            :disabled="!formEditarMesa.numero?.trim()"
             class="flex-1 py-2.5 bg-eden-600 hover:bg-eden-700 disabled:opacity-50 text-white rounded-xl font-bold text-sm transition shadow-sm"
           >
             Guardar
@@ -395,6 +373,10 @@ const mesasFiltradas = computed(() => {
   return mesasStore.mesas.filter(m => m.area_id === Number(filtroArea.value))
 })
 
+const colaboradoresMeseros = computed(() => {
+  return authStore.usuarios.filter(u => u.activo && u.acceso_sistema)
+})
+
 const formMesa = ref({
   numero: '',
   capacidad: 4,
@@ -410,6 +392,7 @@ const formEditarMesa = ref({
 onMounted(() => {
   mesasStore.cargarMesas()
   ordenesStore.cargarOrdenesActivas()
+  authStore.cargarUsuarios()
 })
 
 const abrirOpcionesMesa = (mesa) => {
@@ -421,18 +404,58 @@ const abrirEditarMesa = (mesa) => {
   formEditarMesa.value = {
     id: mesa.id,
     numero: mesa.numero,
-    capacidad: mesa.capacidad
+    capacidad: mesa.capacidad || 4
   }
   modalOpcionesMesa.value = false
   modalEditarMesa.value = true
 }
 
+const tomarMesaAsignarAMi = async (mesa) => {
+  if (!authStore.usuarioActual?.id) {
+    alert('Debes iniciar sesión para asignarte una mesa.')
+    return
+  }
+  try {
+    const data = await mesasStore.asignarMesero(mesa.id, authStore.usuarioActual.id)
+    mesa.mesero_id = data.mesero_id
+    mesa.mesero_nombre = data.mesero_nombre
+    mesa.estado = data.estado
+  } catch (err) {
+    console.error('Error al asignarse la mesa:', err)
+    alert(err.response?.data?.detail || 'Error al asignarse la mesa.')
+  }
+}
+
+const desasignarMeseroMesa = async (mesa) => {
+  try {
+    const data = await mesasStore.asignarMesero(mesa.id, null)
+    mesa.mesero_id = null
+    mesa.mesero_nombre = null
+  } catch (err) {
+    console.error('Error al desasignar mesero:', err)
+    alert(err.response?.data?.detail || 'Error al desasignar mesero.')
+  }
+}
+
+const cambiarMeseroDirecto = async (mesa, nuevoId) => {
+  const meseroId = nuevoId ? Number(nuevoId) : null
+  try {
+    const data = await mesasStore.asignarMesero(mesa.id, meseroId)
+    mesa.mesero_id = data.mesero_id
+    mesa.mesero_nombre = data.mesero_nombre
+    mesa.estado = data.estado
+  } catch (err) {
+    console.error('Error al cambiar mesero:', err)
+    alert(err.response?.data?.detail || 'Error al cambiar mesero.')
+  }
+}
+
 const guardarMesa = async () => {
-  if (!formMesa.value.numero.trim()) return
+  if (!formMesa.value.numero?.trim()) return
   try {
     await mesasStore.crearMesa({
       numero: formMesa.value.numero.trim(),
-      capacidad: formMesa.value.capacidad || 4,
+      capacidad: 4,
       estado: 'libre'
     })
     modalNuevaMesa.value = false
@@ -444,16 +467,14 @@ const guardarMesa = async () => {
 }
 
 const guardarEdicionMesa = async () => {
-  if (!formEditarMesa.value.numero.trim()) return
+  if (!formEditarMesa.value.numero?.trim()) return
   try {
     const data = await mesasStore.actualizarMesa(formEditarMesa.value.id, {
-      numero: formEditarMesa.value.numero.trim(),
-      capacidad: formEditarMesa.value.capacidad || 4
+      numero: formEditarMesa.value.numero.trim()
     })
     modalEditarMesa.value = false
     if (mesaSeleccionada.value && mesaSeleccionada.value.id === data.id) {
       mesaSeleccionada.value.numero = data.numero
-      mesaSeleccionada.value.capacidad = data.capacidad
     }
   } catch (err) {
     console.error('Error al actualizar mesa:', err)
@@ -474,36 +495,20 @@ const confirmarEliminarMesa = async () => {
   }
 }
 
-const ajustarCapacidad = async (mesa, delta) => {
-  const nuevaCapacidad = (mesa.capacidad || 4) + delta
-  if (nuevaCapacidad < 1) return
-  const anterior = mesa.capacidad
-  mesa.capacidad = nuevaCapacidad
-  try {
-    await mesasStore.actualizarCapacidad(mesa.id, nuevaCapacidad)
-  } catch (err) {
-    mesa.capacidad = anterior
-    console.error('Error al actualizar capacidad:', err)
-    alert(err.response?.data?.detail || 'Error al actualizar la capacidad de la mesa.')
-  }
-}
-
-const guardarCapacidadDirecta = async (mesa) => {
-  if (!mesa.capacidad || mesa.capacidad < 1) {
-    mesa.capacidad = 1
-  }
-  try {
-    await mesasStore.actualizarCapacidad(mesa.id, mesa.capacidad)
-  } catch (err) {
-    console.error('Error al actualizar capacidad:', err)
-    alert(err.response?.data?.detail || 'Error al actualizar la capacidad de la mesa.')
-  }
-}
-
 const cambiarEstadoMesa = async (mesa, nuevoEstado) => {
   try {
-    await mesasStore.cambiarEstadoMesa(mesa.id, nuevoEstado)
+    if (nuevoEstado === 'ocupada' && !mesa.mesero_id && authStore.usuarioActual?.id) {
+      await mesasStore.asignarMesero(mesa.id, authStore.usuarioActual.id)
+      mesa.mesero_id = authStore.usuarioActual.id
+      mesa.mesero_nombre = authStore.usuarioActual.nombre
+    } else {
+      await mesasStore.cambiarEstadoMesa(mesa.id, nuevoEstado)
+    }
     mesa.estado = nuevoEstado
+    if (nuevoEstado === 'libre') {
+      mesa.mesero_id = null
+      mesa.mesero_nombre = null
+    }
     modalOpcionesMesa.value = false
   } catch (err) {
     console.error('Error al actualizar estado:', err)
@@ -538,7 +543,16 @@ const getAlertaMesa = (mesaId) => {
   return null
 }
 
-const abrirComandero = (mesa) => {
+const abrirComandero = async (mesa) => {
+  if (!mesa.mesero_id && authStore.usuarioActual?.id) {
+    try {
+      const data = await mesasStore.asignarMesero(mesa.id, authStore.usuarioActual.id)
+      mesa.mesero_id = data.mesero_id
+      mesa.mesero_nombre = data.mesero_nombre
+    } catch (err) {
+      console.warn('No se pudo pre-asignar mesero:', err)
+    }
+  }
   router.push({
     path: '/pos',
     query: { mesaId: mesa.id, mesaNumero: mesa.numero }

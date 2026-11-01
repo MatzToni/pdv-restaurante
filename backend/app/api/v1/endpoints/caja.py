@@ -61,10 +61,11 @@ def cobrar_orden(pago_in: PagoCreate, db: Session = Depends(get_db)):
     orden.estado = EstadoOrden.PAGADO
     orden.fecha_cierre = datetime.now(timezone.utc)
 
-    # Liberar la mesa
+    # Liberar la mesa y desasignar al mesero (se desasigna hasta que se realice el pago)
     mesa = orden.mesa
     if mesa:
         mesa.estado = EstadoMesa.LIBRE
+        mesa.mesero_id = None
 
     db.commit()
     db.refresh(nuevo_pago)
