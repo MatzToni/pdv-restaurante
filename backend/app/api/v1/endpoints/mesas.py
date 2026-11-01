@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from typing import List
 from app.db.session import get_db
 from app.models.mesa import Mesa, Area, EstadoMesa
-from app.models.usuario import Usuario
+from app.models.usuario import Usuario, RolUsuario
 from app.schemas.mesa import (
     MesaOut,
     MesaCreate,
