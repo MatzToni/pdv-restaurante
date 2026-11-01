@@ -42,6 +42,13 @@ def crear_mesa(mesa_in: MesaCreate, db: Session = Depends(get_db)):
     if existente:
         raise HTTPException(status_code=400, detail="Ya existe una mesa con esa denominación.")
     
+    if mesa_in.mesero_id is not None:
+        mesero = db.query(Usuario).filter(Usuario.id == mesa_in.mesero_id, Usuario.activo == True).first()
+        if not mesero:
+            raise HTTPException(status_code=404, detail="Colaborador no encontrado o inactivo.")
+        if mesero.rol not in [RolUsuario.MESERO, RolUsuario.AUXILIAR_GENERAL, RolUsuario.ADMINISTRADOR]:
+            raise HTTPException(status_code=400, detail="Solo los meseros y auxiliares generales pueden tener asignadas mesas para atender.")
+
     nueva_mesa = Mesa(
         numero=mesa_in.numero,
         area_id=mesa_in.area_id,
@@ -74,7 +81,12 @@ def asignar_mesero_mesa(mesa_id: int, datos: MesaAsignarMesero, db: Session = De
     if datos.mesero_id is not None:
         mesero = db.query(Usuario).filter(Usuario.id == datos.mesero_id, Usuario.activo == True).first()
         if not mesero:
-            raise HTTPException(status_code=404, detail="Mesero o colaborador no encontrado.")
+            raise HTTPException(status_code=404, detail="Colaborador no encontrado o inactivo.")
+        if mesero.rol not in [RolUsuario.MESERO, RolUsuario.AUXILIAR_GENERAL, RolUsuario.ADMINISTRADOR]:
+            raise HTTPException(
+                status_code=400,
+                detail="Solo los meseros y auxiliares generales pueden tener asignadas mesas para atender."
+            )
         mesa.mesero_id = datos.mesero_id
         if mesa.estado == EstadoMesa.LIBRE:
             mesa.estado = EstadoMesa.OCUPADA
@@ -123,6 +135,12 @@ def actualizar_mesa(mesa_id: int, mesa_in: MesaUpdate, db: Session = Depends(get
         mesa.capacidad = mesa_in.capacidad
 
     if "mesero_id" in mesa_in.model_fields_set:
+        if mesa_in.mesero_id is not None:
+            mesero = db.query(Usuario).filter(Usuario.id == mesa_in.mesero_id, Usuario.activo == True).first()
+            if not mesero:
+                raise HTTPException(status_code=404, detail="Colaborador no encontrado o inactivo.")
+            if mesero.rol not in [RolUsuario.MESERO, RolUsuario.AUXILIAR_GENERAL, RolUsuario.ADMINISTRADOR]:
+                raise HTTPException(status_code=400, detail="Solo los meseros y auxiliares generales pueden tener asignadas mesas para atender.")
         mesa.mesero_id = mesa_in.mesero_id
 
     if mesa_in.estado is not None:

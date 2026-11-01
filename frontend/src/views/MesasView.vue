@@ -202,25 +202,29 @@
               </div>
             </div>
 
-            <!-- Botón Tomar Mesa si no tiene o Desasignar si está libre -->
+            <!-- Botón Tomar Mesa si no tiene o Desasignar si está libre o rol alto -->
             <button 
               v-if="!mesaSeleccionada.mesero_id"
               @click="tomarMesaAsignarAMi(mesaSeleccionada)"
-              class="px-3 py-1.5 bg-eden-600 hover:bg-eden-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition"
+              class="px-3.5 py-1.5 bg-eden-600 hover:bg-eden-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition flex items-center gap-1.5"
             >
-              Tomar Mesa
+              <span>👋</span> Tomar Mesa
             </button>
             <button 
-              v-else-if="mesaSeleccionada.estado === 'libre'"
+              v-else-if="mesaSeleccionada.estado === 'libre' || esRolAlto"
               @click="desasignarMeseroMesa(mesaSeleccionada)"
               class="text-2xs font-bold text-rose-600 dark:text-rose-400 hover:underline px-2 py-1"
+              title="Quitar mesero asignado"
             >
               Desasignar
             </button>
           </div>
 
-          <!-- Selector de mesero alternativo (si hay colaboradores registrados) -->
-          <div v-if="colaboradoresMeseros.length > 0" class="mt-2.5 pt-2.5 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-2">
+          <!-- Selector de delegación: Exclusivo para Roles Altos (Admin, Gerente, Jefe) y solo meseros/auxiliares -->
+          <div 
+            v-if="esRolAlto && colaboradoresAtencion.length > 0" 
+            class="mt-2.5 pt-2.5 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-2"
+          >
             <span class="text-2xs text-slate-500 dark:text-slate-400 font-semibold shrink-0">Asignar a:</span>
             <select 
               :value="mesaSeleccionada.mesero_id || ''"
@@ -228,7 +232,7 @@
               class="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-eden-600"
             >
               <option value="">-- Sin asignar --</option>
-              <option v-for="colab in colaboradoresMeseros" :key="colab.id" :value="colab.id">
+              <option v-for="colab in colaboradoresAtencion" :key="colab.id" :value="colab.id">
                 {{ colab.nombre }} ({{ colab.rol }})
               </option>
             </select>
@@ -255,7 +259,7 @@
             <span>👤</span> Ocupar Mesa (Comensales Sentados)
           </button>
 
-          <!-- Si está ocupada: opción de pedir cuenta o liberar -->
+          <!-- Si está ocupada: opción de pedir cuenta -->
           <button 
             v-if="mesaSeleccionada.estado === 'ocupada'"
             @click="solicitarCuentaMesa(mesaSeleccionada)"
@@ -273,13 +277,14 @@
             <span>💵</span> Ir a Caja para Cobrar
           </button>
 
-          <!-- Liberar mesa si ya no está libre -->
+          <!-- Botón explícito para Liberar Mesa si los comensales no pidieron nada o se retiraron -->
           <button 
             v-if="mesaSeleccionada.estado !== 'libre'"
-            @click="cambiarEstadoMesa(mesaSeleccionada, 'libre')"
-            class="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+            @click="liberarMesaSinConsumo(mesaSeleccionada)"
+            class="w-full py-2.5 bg-slate-100 dark:bg-slate-800/80 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-700 dark:text-slate-200 hover:text-rose-700 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-800/60 rounded-xl font-bold text-xs transition active:scale-95 flex items-center justify-center gap-1.5 shadow-xs"
+            title="Liberar mesa si los comensales se retiraron sin pedir nada"
           >
-            <span>🟢</span> Marcar como Libre / Limpia
+            <span>🪑</span> Liberar Mesa (Sin Consumo / Salieron)
           </button>
 
           <!-- Opción de editar mesa completa -->
@@ -373,8 +378,16 @@ const mesasFiltradas = computed(() => {
   return mesasStore.mesas.filter(m => m.area_id === Number(filtroArea.value))
 })
 
-const colaboradoresMeseros = computed(() => {
-  return authStore.usuarios.filter(u => u.activo && u.acceso_sistema)
+const esRolAlto = computed(() => {
+  return ['administrador', 'gerente', 'jefe'].includes(authStore.rolActual)
+})
+
+const colaboradoresAtencion = computed(() => {
+  return authStore.usuarios.filter(u => 
+    u.activo && 
+    u.acceso_sistema && 
+    ['mesero', 'auxiliar_general', 'administrador'].includes(u.rol)
+  )
 })
 
 const formMesa = ref({
@@ -415,6 +428,11 @@ const tomarMesaAsignarAMi = async (mesa) => {
     alert('Debes iniciar sesión para asignarte una mesa.')
     return
   }
+  const rol = authStore.rolActual
+  if (!['mesero', 'auxiliar_general', 'administrador'].includes(rol)) {
+    alert('Solo los meseros y auxiliares generales pueden tener asignadas mesas para atender.')
+    return
+  }
   try {
     const data = await mesasStore.asignarMesero(mesa.id, authStore.usuarioActual.id)
     mesa.mesero_id = data.mesero_id
@@ -423,6 +441,41 @@ const tomarMesaAsignarAMi = async (mesa) => {
   } catch (err) {
     console.error('Error al asignarse la mesa:', err)
     alert(err.response?.data?.detail || 'Error al asignarse la mesa.')
+  }
+}
+
+const liberarMesaSinConsumo = async (mesa) => {
+  const ord = ordenesStore.ordenesActivas.find(
+    o => o.mesa_id === mesa.id && o.estado !== 'pagado' && o.estado !== 'cancelada'
+  )
+
+  if (ord && ord.items && ord.items.length > 0) {
+    const confirmar = confirm(`La ${mesa.numero} tiene productos registrados (#${ord.id}). ¿Deseas liberar la mesa porque los clientes se retiraron sin consumir?`)
+    if (!confirmar) return
+    try {
+      await ordenesStore.cancelarOrden(ord.id, 'Clientes se retiraron sin consumir', false)
+    } catch (err) {
+      console.warn('Error cancelando orden activa:', err)
+    }
+  } else if (ord) {
+    try {
+      await ordenesStore.cancelarOrden(ord.id, 'Liberada sin consumo', false)
+    } catch (err) {
+      console.warn('Error cancelando orden vacía:', err)
+    }
+  }
+
+  try {
+    await mesasStore.cambiarEstadoMesa(mesa.id, 'libre')
+    await mesasStore.asignarMesero(mesa.id, null)
+    mesa.estado = 'libre'
+    mesa.mesero_id = null
+    mesa.mesero_nombre = null
+    modalOpcionesMesa.value = false
+    alert(`Mesa ${mesa.numero} liberada exitosamente.`)
+  } catch (err) {
+    console.error('Error al liberar la mesa:', err)
+    alert(err.response?.data?.detail || 'Error al liberar la mesa.')
   }
 }
 
@@ -544,7 +597,8 @@ const getAlertaMesa = (mesaId) => {
 }
 
 const abrirComandero = async (mesa) => {
-  if (!mesa.mesero_id && authStore.usuarioActual?.id) {
+  const rol = authStore.rolActual
+  if (!mesa.mesero_id && authStore.usuarioActual?.id && ['mesero', 'auxiliar_general', 'administrador'].includes(rol)) {
     try {
       const data = await mesasStore.asignarMesero(mesa.id, authStore.usuarioActual.id)
       mesa.mesero_id = data.mesero_id
