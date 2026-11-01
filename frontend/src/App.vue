@@ -22,7 +22,7 @@
             <div class="relative">
               <div class="w-16 h-16 rounded-full p-1 bg-white dark:bg-slate-800 border-2 border-white dark:border-white/20 shadow-md ring-2 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <img 
-                  src="/logo.png" 
+                  src="/logo.png?v=3" 
                   alt="Edén Café Logo" 
                   class="w-full h-full object-contain rounded-full"
                 />
@@ -52,29 +52,29 @@
           </button>
         </div>
 
-        <!-- Modo Contraído -->
-        <div v-else class="flex flex-col items-center gap-2.5 pb-3 mb-2 border-b border-white/50 dark:border-white/10">
-          <router-link to="/" class="group">
+        <!-- Modo Contraído: Logo redondo con punto verde y botón expandir al lado -->
+        <div v-else class="flex items-center justify-center gap-1.5 pb-3 mb-2 border-b border-white/50 dark:border-white/10 w-full px-1">
+          <router-link to="/" class="group shrink-0">
             <div class="relative">
-              <div class="w-12 h-12 rounded-full p-0.5 bg-white dark:bg-slate-800 border border-white dark:border-white/20 shadow-sm ring-1 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div class="w-11 h-11 rounded-full p-0.5 bg-white dark:bg-slate-800 border border-white dark:border-white/20 shadow-sm ring-1 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <img 
-                  src="/logo.png" 
+                  src="/logo.png?v=3" 
                   alt="Edén Café Logo" 
                   class="w-full h-full object-contain rounded-full"
                 />
               </div>
-              <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+              <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
             </div>
           </router-link>
 
           <button
             @click="alternarSidebar"
             title="Expandir barra lateral"
-            class="rounded-xl p-2 bg-white/60 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-white/50 dark:border-white/10 shadow-xs transition-all active:scale-95 flex items-center justify-center shrink-0"
+            class="w-7 h-7 rounded-lg bg-white/60 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-white/50 dark:border-white/10 shadow-xs transition-all active:scale-95 flex items-center justify-center shrink-0"
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
-              class="w-4 h-4" 
+              class="w-3.5 h-3.5" 
               viewBox="0 0 24 24" 
               fill="none" 
               stroke="currentColor" 
@@ -85,12 +85,6 @@
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
           </button>
-        </div>
-
-        <!-- Etiqueta de Sección (Expandida) -->
-        <div v-if="sidebarExpandida" class="px-2 mb-1.5 flex items-center justify-between text-2xs font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">
-          <span>Módulos</span>
-          <span class="text-3xs font-semibold text-emerald-600 dark:text-emerald-400 lowercase">en línea</span>
         </div>
       </div>
 
@@ -319,9 +313,9 @@
 
         <div class="flex items-center gap-2">
           <img 
-            src="/logo.png" 
+            src="/logo.png?v=3" 
             alt="Edén Café Logo" 
-            class="w-8 h-8 object-contain rounded-xl shadow-xs ring-1 ring-white/60 dark:ring-white/10"
+            class="w-8 h-8 object-contain rounded-full shadow-xs ring-1 ring-white/60 dark:ring-white/10"
           />
           <div>
             <h1 class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight tracking-tight">
@@ -381,7 +375,7 @@
               <div class="relative">
                 <div class="w-16 h-16 rounded-full p-1 bg-white dark:bg-slate-800 border-2 border-white dark:border-white/20 shadow-md ring-2 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center">
                   <img 
-                    src="/logo.png" 
+                    src="/logo.png?v=3" 
                     alt="Edén Café Logo" 
                     class="w-full h-full object-contain rounded-full"
                   />
@@ -397,10 +391,6 @@
               >
                 ✕
               </button>
-            </div>
-
-            <div class="px-2 mb-2 text-2xs font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">
-              Módulos del Sistema
             </div>
 
             <!-- Lista de Vistas Móvil -->
