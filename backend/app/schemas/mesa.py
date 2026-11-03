@@ -51,6 +51,7 @@ class MesaOut(MesaBase):
     activa: bool
     area: Optional[AreaOut] = None
     mesero_nombre: Optional[str] = None
+    tiene_consumo: bool = False
 
     class Config:
         from_attributes = True

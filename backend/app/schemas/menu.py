@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from decimal import Decimal
 
 class CategoriaBase(BaseModel):
@@ -42,6 +42,7 @@ class ProductoBase(BaseModel):
     descripcion: Optional[str] = None
     precio: Decimal
     disponible: bool = True
+    activo: bool = True
     requiere_cocina: bool = True
     imagen_url: Optional[str] = None
 
@@ -55,6 +56,7 @@ class ProductoUpdate(BaseModel):
     descripcion: Optional[str] = None
     precio: Optional[Decimal] = None
     disponible: Optional[bool] = None
+    activo: Optional[bool] = None
     requiere_cocina: Optional[bool] = None
     imagen_url: Optional[str] = None
 
@@ -65,3 +67,39 @@ class ProductoOut(ProductoBase):
 
     class Config:
         from_attributes = True
+
+# --- MENÚ DEL DÍA (COMIDA CORRIDA) ---
+
+class MenuDelDiaConfigBase(BaseModel):
+    activo: bool = True
+    nombre: str = "Menú del Día (Comida Corrida)"
+    descripcion: Optional[str] = None
+    precio: Decimal = Decimal("95.00")
+    hora_inicio: str = "12:00"
+    hora_fin: str = "18:00"
+    entradas: List[str] = []
+    platos_fuertes: List[str] = []
+    guarniciones: List[str] = []
+    bebidas: List[str] = []
+    postres: List[str] = []
+    comidas_corridas: List[Dict[str, Any]] = []
+
+class MenuDelDiaConfigOut(MenuDelDiaConfigBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class MenuDelDiaConfigUpdate(BaseModel):
+    activo: Optional[bool] = None
+    nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    precio: Optional[Decimal] = None
+    hora_inicio: Optional[str] = None
+    hora_fin: Optional[str] = None
+    entradas: Optional[List[str]] = None
+    platos_fuertes: Optional[List[str]] = None
+    guarniciones: Optional[List[str]] = None
+    bebidas: Optional[List[str]] = None
+    postres: Optional[List[str]] = None
+    comidas_corridas: Optional[List[Dict[str, Any]]] = None

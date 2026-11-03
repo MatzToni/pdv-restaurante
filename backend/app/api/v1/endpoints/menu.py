@@ -1,20 +1,24 @@
 import os
 import shutil
 import uuid
+from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from app.core.config import settings
 from app.db.session import get_db
-from app.models.menu import Categoria, Producto
+from app.models.menu import Categoria, Producto, MenuDelDiaConfig
 from app.models.inventario import Receta
+from app.models.orden import OrdenItem
 from app.schemas.menu import (
     CategoriaOut,
     CategoriaCreate,
     CategoriaUpdate,
     ProductoOut,
     ProductoCreate,
-    ProductoUpdate
+    ProductoUpdate,
+    MenuDelDiaConfigOut,
+    MenuDelDiaConfigUpdate
 )
 
 router = APIRouter()
@@ -83,7 +87,7 @@ def listar_productos(
     incluir_inactivos: bool = False,
     db: Session = Depends(get_db)
 ):
-    query = db.query(Producto).options(joinedload(Producto.categoria))
+    query = db.query(Producto).options(joinedload(Producto.categoria)).filter(Producto.activo == True)
     if not incluir_inactivos:
         query = query.filter(Producto.disponible == True)
     if categoria_id:
@@ -195,7 +199,148 @@ def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):
     if not prod:
         raise HTTPException(status_code=404, detail="Platillo no encontrado.")
 
-    # Marcar como no disponible en lugar de romper llaves foráneas de órdenes pasadas
-    prod.disponible = False
+    # Verificar si tiene registros históricos en órdenes
+    tiene_ordenes = db.query(OrdenItem).filter(OrdenItem.producto_id == producto_id).first()
+    if tiene_ordenes:
+        # Desactivar lógicamente para no romper claves foráneas de ventas pasadas
+        prod.activo = False
+        prod.disponible = False
+        db.commit()
+        return {"message": "Platillo archivado y retirado del catálogo general."}
+    else:
+        # Eliminación física directa de la base de datos
+        db.delete(prod)
+        db.commit()
+        return {"message": "Platillo eliminado definitivamente del catálogo general."}
+
+# --- CONFIGURACIÓN Y GESTIÓN DEL MENÚ DEL DÍA (COMIDA CORRIDA) ---
+
+@router.get("/menu-del-dia", response_model=MenuDelDiaConfigOut, summary="Obtener configuración del Menú del Día de hoy")
+def obtener_menu_del_dia(db: Session = Depends(get_db)):
+    config = db.query(MenuDelDiaConfig).first()
+    if not config:
+        config = MenuDelDiaConfig(
+            id=1,
+            activo=True,
+            nombre="Menú del Día (Comida Corrida)",
+            descripcion="Comida corrida completa con Entrada, Plato Fuerte, Guarnición, Bebida y Postre casero",
+            precio=Decimal("95.00"),
+            hora_inicio="12:00",
+            hora_fin="18:00",
+            entradas=["Sopa de fideo casera", "Consomé de pollo con verduras", "Crema del día"],
+            platos_fuertes=["Milanesa empanizada de pollo o res", "Mojarra frita al mojo de ajo", "Albóndigas caseras en chipotle", "Pechuga asada a la plancha"],
+            guarniciones=["Arroz mexicano y frijoles refritos", "Papas a la francesa y ensalada fresca"],
+            bebidas=["Agua fresca de Jamaica", "Agua de Limón con pepino y chía", "Agua de Guayaba"],
+            postres=["Gelatina de mosaico", "Arroz con leche", "Flan napolitano", "Sin postre"],
+            comidas_corridas=[
+                {
+                    "id": "1",
+                    "nombre": "Comida Corrida 1: Milanesa de pollo con espagueti verde",
+                    "precio": 95.0,
+                    "activo": True,
+                    "entradas": ["Sopa"],
+                    "platos_fuertes": ["Milanesa de pollo con espagueti verde"],
+                    "bebidas": ["Agua de jamaica"],
+                    "postres": []
+                },
+                {
+                    "id": "2",
+                    "nombre": "Comida Corrida 2: Albóndigas con arroz rojo",
+                    "precio": 95.0,
+                    "activo": True,
+                    "entradas": ["Puchero"],
+                    "platos_fuertes": ["Albóndiga con arroz rojo"],
+                    "bebidas": ["Agua de limón con pepino"],
+                    "postres": ["Gelatina"]
+                }
+            ]
+        )
+        db.add(config)
+        db.commit()
+        db.refresh(config)
+    
+    # Asegurar que comidas_corridas tenga al menos los ejemplos por defecto si está vacío
+    if not config.comidas_corridas:
+        config.comidas_corridas = [
+            {
+                "id": "1",
+                "nombre": "Comida Corrida 1: Milanesa de pollo con espagueti verde",
+                "precio": float(config.precio or 95.0),
+                "activo": True,
+                "entradas": ["Sopa"],
+                "platos_fuertes": ["Milanesa de pollo con espagueti verde"],
+                "bebidas": ["Agua de jamaica"],
+                "postres": []
+            },
+            {
+                "id": "2",
+                "nombre": "Comida Corrida 2: Albóndigas con arroz rojo",
+                "precio": float(config.precio or 95.0),
+                "activo": True,
+                "entradas": ["Puchero"],
+                "platos_fuertes": ["Albóndiga con arroz rojo"],
+                "bebidas": ["Agua de limón con pepino"],
+                "postres": ["Gelatina"]
+            }
+        ]
+        db.commit()
+        db.refresh(config)
+
+    return config
+
+@router.put("/menu-del-dia", response_model=MenuDelDiaConfigOut, summary="Actualizar opciones y horario del Menú del Día")
+def actualizar_menu_del_dia(config_in: MenuDelDiaConfigUpdate, db: Session = Depends(get_db)):
+    config = db.query(MenuDelDiaConfig).first()
+    if not config:
+        config = MenuDelDiaConfig(id=1)
+        db.add(config)
+
+    if config_in.activo is not None:
+        config.activo = config_in.activo
+    if config_in.nombre is not None:
+        config.nombre = config_in.nombre
+    if config_in.descripcion is not None:
+        config.descripcion = config_in.descripcion
+    if config_in.precio is not None:
+        config.precio = config_in.precio
+    if config_in.hora_inicio is not None:
+        config.hora_inicio = config_in.hora_inicio
+    if config_in.hora_fin is not None:
+        config.hora_fin = config_in.hora_fin
+    if config_in.entradas is not None:
+        config.entradas = config_in.entradas
+    if config_in.platos_fuertes is not None:
+        config.platos_fuertes = config_in.platos_fuertes
+    if config_in.guarniciones is not None:
+        config.guarniciones = config_in.guarniciones
+    if config_in.bebidas is not None:
+        config.bebidas = config_in.bebidas
+    if config_in.postres is not None:
+        config.postres = config_in.postres
+    if config_in.comidas_corridas is not None:
+        config.comidas_corridas = config_in.comidas_corridas
+
+    # Sincronizar existencia de producto "menu_del_dia" en el catálogo
+    prod = db.query(Producto).filter(Producto.tipo_item == "menu_del_dia").first()
+    if not prod:
+        cat = db.query(Categoria).filter(Categoria.nombre.ilike("%platillo%")).first() or db.query(Categoria).first()
+        if cat:
+            prod = Producto(
+                categoria_id=cat.id,
+                nombre=config.nombre,
+                tipo_item="menu_del_dia",
+                descripcion=config.descripcion,
+                precio=config.precio,
+                disponible=config.activo,
+                requiere_cocina=True
+            )
+            db.add(prod)
+    elif prod:
+        prod.nombre = config.nombre
+        prod.descripcion = config.descripcion
+        prod.precio = config.precio
+        prod.disponible = config.activo
+
     db.commit()
-    return {"message": "Platillo desactivado correctamente"}
+    db.refresh(config)
+    return config

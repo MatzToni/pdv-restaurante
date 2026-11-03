@@ -5,23 +5,42 @@ export const useMenuStore = defineStore('menu', {
   state: () => ({
     categorias: [],
     productos: [],
+    menuDelDia: null,
     cargando: false
   }),
   actions: {
     async cargarCatalogo(incluirInactivos = false) {
       this.cargando = true
       try {
-        const [resCat, resProd] = await Promise.all([
+        const [resCat, resProd, resMdd] = await Promise.all([
           api.get('/menu/categorias'),
-          api.get(`/menu/productos?incluir_inactivos=${incluirInactivos}`)
+          api.get(`/menu/productos?incluir_inactivos=${incluirInactivos}`),
+          api.get('/menu/menu-del-dia')
         ])
         this.categorias = resCat.data
         this.productos = resProd.data
+        this.menuDelDia = resMdd.data
       } catch (err) {
         console.error('Error cargando catálogo:', err)
       } finally {
         this.cargando = false
       }
+    },
+    async cargarMenuDelDia() {
+      try {
+        const { data } = await api.get('/menu/menu-del-dia')
+        this.menuDelDia = data
+        return data
+      } catch (err) {
+        console.error('Error cargando menú del día:', err)
+        return null
+      }
+    },
+    async guardarMenuDelDia(configData) {
+      const { data } = await api.put('/menu/menu-del-dia', configData)
+      this.menuDelDia = data
+      await this.cargarCatalogo(true)
+      return data
     },
     async crearProducto(prodData) {
       const { data } = await api.post('/menu/productos', prodData)

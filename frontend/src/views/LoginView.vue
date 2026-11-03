@@ -252,6 +252,7 @@
               v-model="formPassword.email"
               type="email"
               required
+              maxlength="100"
               placeholder="admin@edencafe.com"
               class="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-eden-600"
             />
@@ -263,6 +264,7 @@
               v-model="formPassword.password"
               type="password"
               required
+              maxlength="100"
               placeholder="••••••••"
               class="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-eden-600"
             />

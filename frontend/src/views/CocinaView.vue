@@ -40,16 +40,34 @@
           <!-- Cabecera de la comanda -->
           <div class="p-3.5 bg-slate-900 dark:bg-slate-800 text-white font-bold flex justify-between items-center border-b border-slate-800 dark:border-slate-700">
             <div>
-              <span class="text-lg font-black">{{ orden.mesa_numero || `Mesa #${orden.mesa_id}` }}</span>
-              <span class="text-xs text-slate-400 block font-normal">Orden #{{ orden.id }} · {{ orden.mesero_nombre || 'Mesero' }}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-lg font-black">{{ orden.mesa_numero || `Mesa #${orden.mesa_id}` }}</span>
+                <span v-if="orden.tipo_pedido === 'domicilio'" class="text-3xs font-black uppercase px-2 py-0.5 rounded bg-blue-600 text-white">
+                  🛵 ENVÍO
+                </span>
+                <span v-else-if="orden.tipo_pedido === 'para_llevar'" class="text-3xs font-black uppercase px-2 py-0.5 rounded bg-amber-500 text-white">
+                  🛍️ LLEVAR
+                </span>
+              </div>
+              <span class="text-xs text-slate-400 block font-normal">Orden #{{ orden.id }} · {{ (orden.tipo_pedido === 'domicilio' || orden.tipo_pedido === 'para_llevar') ? 'Responsable: ' + (orden.mesero_nombre || 'Jefatura') : (orden.mesero_nombre || 'Mesero') }}</span>
+              <div v-if="orden.tipo_pedido === 'domicilio' && orden.datos_entrega" class="text-2xs text-blue-300 font-semibold mt-0.5">
+                📍 {{ orden.datos_entrega.direccion }} <span v-if="orden.datos_entrega.telefono">· 📞 {{ orden.datos_entrega.telefono }}</span>
+              </div>
             </div>
-            <div class="text-right">
+            <div class="text-right flex flex-col items-end gap-1">
               <span class="text-xs bg-slate-800 dark:bg-slate-700 text-slate-300 px-2 py-0.5 rounded-md font-mono">
                 {{ formatHora(orden.fecha_apertura) }}
               </span>
-              <span class="block text-3xs font-extrabold uppercase mt-1" :class="semaforoTiempoColor(orden.fecha_apertura)">
+              <span class="block text-3xs font-extrabold uppercase" :class="semaforoTiempoColor(orden.fecha_apertura)">
                 ⏱️ {{ minutosTranscurridos(orden.fecha_apertura) }} min
               </span>
+              <button 
+                @click="abrirModalCancelarComanda(orden)"
+                class="px-2 py-0.5 bg-rose-950/70 hover:bg-rose-600 text-rose-300 hover:text-white rounded text-3xs font-bold transition active:scale-95 border border-rose-800/80"
+                title="Cancelar comanda completa"
+              >
+                ✕ Cancelar Orden
+              </button>
             </div>
           </div>
 
@@ -68,7 +86,8 @@
                 item.estado === 'cancelado' ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50 opacity-60' :
                 item.estado === 'en_observacion' ? 'bg-amber-500/15 border-amber-500 dark:border-amber-400 animate-pulse' :
                 item.estado === 'listo' ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/60' :
-                item.estado === 'entregado' ? 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800/60' :
+                item.estado === 'recibido_mesero' ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/60' :
+                item.estado === 'entregado' ? 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800/60 opacity-70' :
                 item.estado === 'preparando' ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800/60' :
                 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60'
               ]"
@@ -83,6 +102,14 @@
                       {{ item.producto_nombre }}
                     </span>
 
+                    <!-- Distintivo Para Llevar en Cocina -->
+                    <span 
+                      v-if="item.para_llevar || orden.tipo_pedido === 'para_llevar' || orden.tipo_pedido === 'domicilio'"
+                      class="inline-flex items-center gap-1 text-3xs font-black uppercase bg-amber-500 text-white px-2 py-0.5 rounded-md mt-0.5 shadow-2xs"
+                    >
+                      📦 EMPACAR PARA LLEVAR (Usar contenedor desechable)
+                    </span>
+
                     <!-- Desglose de extras resaltados para cocina -->
                     <div v-if="item.extras && item.extras.length > 0" class="flex flex-wrap gap-1 mt-1">
                       <span 
@@ -94,14 +121,30 @@
                       </span>
                     </div>
 
-                    <!-- Nota del mesero -->
-                    <span v-if="item.notas" class="text-xs text-amber-700 dark:text-amber-400 font-semibold italic block mt-0.5">
+                    <!-- Formateo especial si es Menú del Día -->
+                    <div v-if="esMenuDelDia(item)" class="mt-1.5 p-2 rounded-xl bg-amber-500/10 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 space-y-1">
+                      <span class="text-3xs font-black uppercase text-amber-800 dark:text-amber-300 block">
+                        🍱 Menú del Día (Tiempos):
+                      </span>
+                      <div class="flex flex-wrap gap-1">
+                        <span 
+                          v-for="(parte, pi) in parsearTiemposMenu(item.notas)" 
+                          :key="pi"
+                          class="text-2xs font-bold px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-2xs"
+                        >
+                          {{ parte }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Nota del mesero si no es menú del día -->
+                    <span v-else-if="item.notas" class="text-xs text-amber-700 dark:text-amber-400 font-semibold italic block mt-0.5">
                       📝 {{ item.notas }}
                     </span>
 
                     <!-- Alerta de observación activa -->
                     <div v-if="item.estado === 'en_observacion'" class="mt-1 p-1.5 rounded-lg bg-amber-500/20 text-amber-900 dark:text-amber-200 text-xs font-bold border border-amber-400/50">
-                      ⚠️ En espera del mesero: "{{ item.observacion_cocina }}"
+                      ⚠️ En espera de {{ (orden.tipo_pedido === 'domicilio' || orden.tipo_pedido === 'para_llevar') ? 'jefatura / mostrador' : 'mesero' }}: "{{ item.observacion_cocina }}"
                     </div>
 
                     <!-- Si son múltiples platillos iguales: opción para preparar 1 y descartar otro o separarlos -->
@@ -140,20 +183,14 @@
                 </button>
               </div>
 
-              <!-- Acciones de Estado del Platillo -->
+              <!-- Acciones de Estado del Platillo (Un solo botón para Cocina: Listo) -->
               <div v-if="item.estado !== 'cancelado'" class="flex gap-1.5 pt-1.5 mt-1 border-t border-slate-200/50 dark:border-slate-700/50">
+                <!-- Único botón para marcar el platillo listo en cocina -->
                 <button 
-                  v-if="item.estado === 'pendiente'"
-                  @click="cambiarEstadoItem(item.id, 'preparando')"
-                  class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-white transition active:scale-95 shadow-2xs"
-                >
-                  👨‍🍳 Preparar
-                </button>
-
-                <button 
-                  v-if="item.estado === 'preparando'"
+                  v-if="['pendiente', 'preparando'].includes(item.estado)"
                   @click="cambiarEstadoItem(item.id, 'listo')"
-                  class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition active:scale-95 shadow-2xs"
+                  class="flex-1 py-2 text-xs font-black rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition active:scale-95 shadow-sm flex items-center justify-center gap-1.5"
+                  title="Marcar platillo como preparado y listo para su entrega"
                 >
                   ✓ Listo
                 </button>
@@ -163,29 +200,28 @@
                   v-if="['pendiente', 'preparando'].includes(item.estado)"
                   @click="abrirModalIncidencia(item)"
                   title="Reportar falta de ingrediente o aclaración al mesero"
-                  class="px-2 py-1.5 text-xs font-bold rounded-lg bg-amber-100 dark:bg-amber-950/60 hover:bg-amber-200 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 transition active:scale-95 flex items-center gap-1"
+                  class="px-2.5 py-2 text-xs font-bold rounded-xl bg-amber-100 dark:bg-amber-950/60 hover:bg-amber-200 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 transition active:scale-95 flex items-center gap-1"
                 >
                   <span>⚠️</span> Aclarar
                 </button>
 
                 <span 
                   v-if="item.estado === 'en_observacion'"
-                  class="text-xs font-black text-amber-600 dark:text-amber-400 flex items-center gap-1 mx-auto py-1"
+                  class="text-xs font-black text-amber-600 dark:text-amber-400 flex items-center gap-1 mx-auto py-1.5"
                 >
-                  ⏳ Esperando al mesero...
+                  ⏳ {{ (orden.tipo_pedido === 'domicilio' || orden.tipo_pedido === 'para_llevar') ? 'Esperando a jefatura...' : 'Esperando al mesero...' }}
                 </span>
 
-                <button 
-                  v-if="item.estado === 'listo'"
-                  @click="cambiarEstadoItem(item.id, 'entregado')"
-                  class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition active:scale-95 shadow-2xs flex items-center justify-center gap-1"
+                <span 
+                  v-if="item.estado === 'listo' || item.estado === 'recibido_mesero'"
+                  class="text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1 mx-auto py-1"
                 >
-                  <span>🍽️</span> Servido / Entregado
-                </button>
+                  ✓ Listo en barra (Esperando entrega)
+                </span>
 
                 <span 
                   v-if="item.estado === 'entregado'"
-                  class="text-xs font-black text-purple-700 dark:text-purple-300 flex items-center gap-1 mx-auto py-1"
+                  class="text-xs font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1 mx-auto py-1"
                 >
                   ✓ Servido en Mesa
                 </span>
@@ -233,6 +269,7 @@
           <textarea 
             v-model="textoIncidencia"
             rows="3"
+            maxlength="200"
             placeholder="Ej. Se agotó el aguacate, ¿cambiar por pollo o cancelar?"
             class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-amber-500 resize-none"
           ></textarea>
@@ -274,6 +311,7 @@
             <input 
               v-model="formDescartar.motivo" 
               type="text" 
+              maxlength="150"
               placeholder="Ej. Insumo suficiente solo para 1 platillo" 
               class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-rose-500"
             />
@@ -324,9 +362,12 @@
           <div>
             <label class="text-xs font-bold text-slate-700 dark:text-slate-300">PIN de Autorización (4 dígitos)</label>
             <input 
-              v-model="formCancelar.pin" 
+              :value="formCancelar.pin" 
+              @input="formCancelar.pin = $event.target.value.replace(/\D/g, '').slice(0, 4)"
               type="password" 
-              maxlength="10"
+              maxlength="4"
+              inputmode="numeric"
+              pattern="[0-9]*"
               placeholder="••••" 
               class="w-full mt-1 p-2.5 text-center text-lg tracking-widest font-mono border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-rose-500"
             />
@@ -337,6 +378,7 @@
             <input 
               v-model="formCancelar.motivo" 
               type="text" 
+              maxlength="150"
               placeholder="Ej. Platillo frío, cliente cambió de opinión" 
               class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-rose-500"
             />
@@ -371,6 +413,77 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Cancelar Comanda Completa desde Cocina -->
+    <div v-if="modalCancelarComanda && ordenACancelar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <div class="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+          <span class="text-2xl">⚠️</span>
+          <div>
+            <h3 class="text-base font-black text-slate-800 dark:text-slate-100">Cancelar Comanda Completa</h3>
+            <p class="text-2xs text-slate-400 font-semibold">{{ ordenACancelar.mesa_numero || `Orden #${ordenACancelar.id}` }}</p>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Se cancelará la orden completa y se actualizará en salón y caja.
+        </p>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Motivo de Cancelación</label>
+            <input 
+              v-model="formCancelarComanda.motivo" 
+              type="text" 
+              maxlength="150"
+              placeholder="Ej. Cliente canceló pedido, falta de insumos" 
+              class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-rose-500"
+            />
+          </div>
+
+          <div>
+            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">PIN de Autorización (Jefe / Gerente)</label>
+            <input 
+              :value="formCancelarComanda.pin" 
+              @input="formCancelarComanda.pin = $event.target.value.replace(/\D/g, '').slice(0, 4)"
+              type="password" 
+              maxlength="4"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              placeholder="••••" 
+              class="w-full mt-1 p-2.5 text-center text-lg tracking-widest font-mono border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-rose-500"
+            />
+          </div>
+
+          <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
+            <input 
+              v-model="formCancelarComanda.genera_merma" 
+              type="checkbox" 
+              class="rounded text-rose-600 focus:ring-rose-500 w-4 h-4"
+            />
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
+              ¿Genera Merma? (Platillos ya preparados)
+            </span>
+          </label>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button 
+            @click="modalCancelarComanda = false"
+            class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
+          >
+            Volver
+          </button>
+          <button 
+            @click="confirmarCancelarComanda"
+            :disabled="!formCancelarComanda.pin || !formCancelarComanda.motivo"
+            class="px-5 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded-xl shadow-sm transition active:scale-95"
+          >
+            Confirmar Cancelación
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -397,6 +510,15 @@ const motivosPredefinidos = [
 const modalCancelar = ref(false)
 const itemSeleccionado = ref(null)
 const formCancelar = ref({
+  pin: '',
+  motivo: '',
+  genera_merma: false
+})
+
+// Modal Cancelar Comanda Completa
+const modalCancelarComanda = ref(false)
+const ordenACancelar = ref(null)
+const formCancelarComanda = ref({
   pin: '',
   motivo: '',
   genera_merma: false
@@ -470,6 +592,28 @@ const confirmarCancelacion = async () => {
   }
 }
 
+const abrirModalCancelarComanda = (orden) => {
+  ordenACancelar.value = orden
+  formCancelarComanda.value = { pin: '', motivo: '', genera_merma: false }
+  modalCancelarComanda.value = true
+}
+
+const confirmarCancelarComanda = async () => {
+  if (!ordenACancelar.value) return
+  try {
+    await ordenesStore.cancelarOrden(ordenACancelar.value.id, {
+      pin_autorizacion: formCancelarComanda.value.pin.trim(),
+      motivo: formCancelarComanda.value.motivo.trim(),
+      genera_merma: formCancelarComanda.value.genera_merma
+    })
+    modalCancelarComanda.value = false
+    ordenACancelar.value = null
+    alert('Comanda cancelada correctamente en todo el sistema.')
+  } catch (err) {
+    alert(err.response?.data?.detail || 'Error al autorizar la cancelación de la comanda.')
+  }
+}
+
 const separarPorcion = async (item) => {
   try {
     await ordenesStore.separarItem(item.id)
@@ -516,5 +660,14 @@ const semaforoTiempoColor = (fechaIso) => {
   if (min >= 20) return 'text-rose-400'
   if (min >= 10) return 'text-amber-400'
   return 'text-emerald-400'
+}
+
+const esMenuDelDia = (item) => {
+  return item.producto_nombre?.toLowerCase().includes('menú del día') || (item.notas && item.notas.includes('🥣'))
+}
+
+const parsearTiemposMenu = (notas) => {
+  if (!notas) return []
+  return notas.split('|').map(s => s.trim()).filter(Boolean)
 }
 </script>

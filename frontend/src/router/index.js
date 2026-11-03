@@ -9,6 +9,7 @@ import CajaView from '../views/CajaView.vue'
 import InventarioView from '../views/InventarioView.vue'
 import UsuariosView from '../views/UsuariosView.vue'
 import PlatillosView from '../views/PlatillosView.vue'
+import ConfiguracionView from '../views/ConfiguracionView.vue'
 
 const routes = [
   {
@@ -83,6 +84,15 @@ const routes = [
     component: PlatillosView,
     meta: { 
       title: 'Platillos y Menú',
+      roles: ['administrador', 'gerente']
+    }
+  },
+  {
+    path: '/configuracion',
+    name: 'configuracion',
+    component: ConfiguracionView,
+    meta: { 
+      title: 'Configuración y Ajustes',
       roles: ['administrador', 'gerente']
     }
   },

@@ -29,6 +29,10 @@ class CajaTurno(Base):
     usuario = relationship("Usuario")
     pagos = relationship("Pago", back_populates="caja_turno")
 
+    @property
+    def usuario_nombre(self):
+        return self.usuario.nombre if self.usuario else None
+
 class Pago(Base):
     __tablename__ = "pagos"
 

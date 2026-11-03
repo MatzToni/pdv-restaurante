@@ -26,6 +26,9 @@ PDV/
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/                 # Interfaz de usuario (Vue 3)
+│   ├── public/              # Assets estáticos y manifiesto PWA
+│   │   ├── logo.png         # Icono corporativo
+│   │   └── manifest.json    # Manifiesto PWA (Modo Standalone, colores)
 │   ├── src/
 │   │   ├── views/           # Mesas, Comandero (POS), Cocina (KDS), Caja
 │   │   ├── router/          # Enrutamiento de vistas
@@ -81,33 +84,53 @@ npm run dev
 
 ---
 
-## 📱 Acceso desde Tablets (iPad) y Celulares en Red Local (LAN)
+## 📱 Acceso e Instalación en Tablets (iPad / Android) y Celulares
 
-El sistema está optimizado para su uso en computadoras fijas en caja y dispositivos móviles (tablets iPad/Android o teléfonos inteligentes) para meseros y pantallas de cocina KDS dentro de la misma red local (Wi-Fi o cable Ethernet).
+El sistema está desarrollado con arquitectura **PWA (Progressive Web App)** y diseño **Mobile-First / Touch-Friendly**, optimizado para ejecutarse en computadoras fijas en caja y dispositivos móviles de meseros o pantallas de cocina (KDS) en la red local (LAN).
 
-### 🚀 Conexión Rápida (Entorno Windows con WSL2)
+### ⚙️ Arquitectura PWA Integrada
+* **Manifiesto Web (`frontend/public/manifest.json`):** Configurado con el esquema oficial de Edén Café (tema verde bosque `#486848`, orientación responsiva y modo `standalone`).
+* **Soporte Nativo iOS/iPadOS (`frontend/index.html`):** Metaetiquetas de pantalla completa (`apple-mobile-web-app-capable`), barra de estado translúcida (`apple-mobile-web-app-status-bar-style`), icono corporativo (`apple-touch-icon`) y ajuste seguro de pantalla (`viewport-fit=cover`).
+* **Optimización de Caché (`frontend/nginx.conf`):** Reglas para que los cambios en el manifiesto, icono y HTML se actualicen sin requerir borrado manual de caché en los dispositivos.
 
-Cuando el servidor corre sobre Windows con Docker en WSL2, Windows aísla internamente los puertos del sistema virtual. Para permitir que dispositivos externos (como un iPad) se conecten:
+---
 
-1. **Ejecutar el script de habilitación (1 Clic):**
-   * En Windows, haz doble clic en `scripts/habilitar_lan.bat` (o el acceso directo en el Escritorio: `Habilitar_iPad_PDV.bat`).
+### 🚀 Conexión en Red Local (Windows + Docker en WSL2)
+
+Cuando el servidor opera sobre Windows con Docker en WSL2, Windows aísla internamente los puertos del subsistema virtual. Para habilitar el acceso a dispositivos en la misma red Wi-Fi:
+
+1. **Habilitar acceso con 1 Clic:**
+   * En Windows, haz doble clic en `scripts/habilitar_lan.bat` (o en el acceso directo del Escritorio: `Habilitar_iPad_PDV.bat`).
    * El script solicita permisos de Administrador y automáticamente:
      * Detecta la IP interna actual de WSL2 (`wsl hostname -I`).
-     * Reenvía los puertos `5173` (Frontend) y `8000` (Backend API).
-     * Abre las reglas de entrada correspondientes en el Firewall de Windows.
-     * Muestra la dirección IP local a la que debes ingresar.
+     * Configura el reenvío de puertos `5173` (Frontend) y `8000` (Backend API).
+     * Habilita las reglas de entrada en el Firewall de Windows.
+     * Muestra en pantalla la dirección IP local de tu PC (ejemplo: `192.168.1.98`).
 
-2. **Abrir en tu iPad o Tablet:**
-   * Conecta tu iPad a la misma red Wi-Fi del módem/router.
-   * Abre Safari o Chrome e ingresa a:
+2. **Conectar el iPad o Tablet:**
+   * Asegúrate de que el dispositivo esté conectado a la misma red Wi-Fi que la computadora.
+   * Abre el navegador y visita:
      ```text
      http://<IP_DE_TU_PC>:5173
      ```
      *(Ejemplo: `http://192.168.1.98:5173`)*
 
-3. **Experiencia de App Nativa a Pantalla Completa en iPad:**
-   * En Safari, presiona el botón **Compartir** (icono de cuadrado con flecha hacia arriba) y selecciona **"Agregar a pantalla de inicio"**.
-   * Se creará un acceso directo con el icono de Edén Café que abrirá el comandero a pantalla completa sin barra de navegación del navegador.
+---
+
+### 📲 Instalación como App Nativa (Sin App Store)
+
+#### En iPad / iPhone (Safari):
+1. Abre la URL en **Safari**.
+2. Presiona el botón **Compartir** (icono de cuadrado con flecha hacia arriba ⬆️).
+3. Selecciona la opción **"Agregar a pantalla de inicio"** (*Add to Home Screen*).
+4. Confirma el nombre **"Edén Café"** y pulsa **Agregar**.
+5. Abre la aplicación desde el icono nuevo en la pantalla de inicio: se ejecutará a pantalla completa, con icono corporativo y sin barras de navegación de Safari.
+
+#### En Tablets / Celulares Android (Chrome):
+1. Abre la URL en **Google Chrome**.
+2. Presiona el botón de menú (tres puntos verticales `⋮`) en la esquina superior derecha.
+3. Toca en **"Instalar aplicación"** o **"Agregar a la pantalla principal"**.
+4. Pulsa **Instalar**. La app quedará integrada en el cajón de aplicaciones de Android.
 
 ---
 

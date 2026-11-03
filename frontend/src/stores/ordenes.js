@@ -28,6 +28,16 @@ export const useOrdenesStore = defineStore('ordenes', {
         return null
       }
     },
+    async obtenerOrden(ordenId, usuarioId = null) {
+      try {
+        const params = usuarioId ? { usuario_id: usuarioId } : {}
+        const { data } = await api.get(`/ordenes/${ordenId}`, { params })
+        return data
+      } catch (err) {
+        console.error('Error obteniendo orden por ID:', err)
+        return null
+      }
+    },
     async enviarComanda(ordenData) {
       const { data } = await api.post('/ordenes/', ordenData)
       await this.cargarOrdenesActivas()
@@ -65,6 +75,11 @@ export const useOrdenesStore = defineStore('ordenes', {
       await this.cargarOrdenesActivas()
       return data
     },
+    async entregarItemsOrden(ordenId) {
+      const { data } = await api.post(`/ordenes/${ordenId}/entregar-items`)
+      await this.cargarOrdenesActivas()
+      return data
+    },
     async descartarUnidadItem(itemId, { motivo, genera_merma }) {
       const { data } = await api.post(`/ordenes/items/${itemId}/descartar-unidad`, {
         motivo,
@@ -87,10 +102,11 @@ export const useOrdenesStore = defineStore('ordenes', {
       await this.cargarOrdenesActivas()
       return data
     },
-    async cancelarOrden(ordenId, { pin_autorizacion, motivo }) {
+    async cancelarOrden(ordenId, { pin_autorizacion, motivo, genera_merma } = {}) {
       const { data } = await api.post(`/ordenes/${ordenId}/cancelar`, {
-        pin_autorizacion,
-        motivo
+        pin_autorizacion: pin_autorizacion || null,
+        motivo: motivo || 'Cancelada',
+        genera_merma: Boolean(genera_merma)
       })
       await this.cargarOrdenesActivas()
       return data

@@ -259,6 +259,7 @@
                 <input 
                   v-model="formDoc.titulo" 
                   type="text" 
+                  maxlength="100"
                   placeholder="Ej. Constancia Salubridad 2026" 
                   class="w-full mt-1 p-2 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
                 />
@@ -278,6 +279,7 @@
                 <input 
                   v-model="formDoc.url_archivo" 
                   type="text" 
+                  maxlength="255"
                   placeholder="/documentos/cert_salud.pdf" 
                   class="w-full mt-1 p-2 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
                 />
@@ -352,6 +354,7 @@
             <input 
               v-model="formUsuario.nombre" 
               type="text" 
+              maxlength="80"
               placeholder="Ej. María Elena González" 
               class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
             />
@@ -364,17 +367,21 @@
               <input 
                 v-model="formUsuario.email" 
                 type="email" 
+                maxlength="100"
                 placeholder="maria@edencafe.com" 
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>
 
             <div>
-              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Teléfono Móvil</label>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Teléfono Móvil (10 dígitos)</label>
               <input 
-                v-model="formUsuario.telefono" 
+                :value="formUsuario.telefono" 
+                @input="formUsuario.telefono = $event.target.value.replace(/\D/g, '').slice(0, 10)"
                 type="tel" 
-                placeholder="555-000-0000" 
+                maxlength="10"
+                inputmode="tel"
+                placeholder="Ej. 5512345678" 
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>
@@ -479,7 +486,10 @@
               <input 
                 v-model.number="formUsuario.salario_diario" 
                 type="number" 
+                min="0"
+                max="99999.99"
                 step="10.00"
+                inputmode="decimal"
                 placeholder="0.00" 
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600 font-mono"
               />
@@ -500,8 +510,10 @@
             <div>
               <label class="text-3xs font-bold text-slate-700 dark:text-slate-300">CURP</label>
               <input 
-                v-model="formUsuario.curp" 
+                :value="formUsuario.curp" 
+                @input="formUsuario.curp = $event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 18)"
                 type="text" 
+                maxlength="18"
                 placeholder="18 caracteres" 
                 class="w-full mt-1 p-2 text-xs font-mono uppercase border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
@@ -509,8 +521,10 @@
             <div>
               <label class="text-3xs font-bold text-slate-700 dark:text-slate-300">RFC</label>
               <input 
-                v-model="formUsuario.rfc" 
+                :value="formUsuario.rfc" 
+                @input="formUsuario.rfc = $event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 13)"
                 type="text" 
+                maxlength="13"
                 placeholder="13 caracteres" 
                 class="w-full mt-1 p-2 text-xs font-mono uppercase border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
@@ -518,9 +532,12 @@
             <div>
               <label class="text-3xs font-bold text-slate-700 dark:text-slate-300">NSS</label>
               <input 
-                v-model="formUsuario.nss" 
+                :value="formUsuario.nss" 
+                @input="formUsuario.nss = $event.target.value.replace(/\D/g, '').slice(0, 11)"
                 type="text" 
-                placeholder="Seguro Social" 
+                maxlength="11"
+                inputmode="numeric"
+                placeholder="11 dígitos" 
                 class="w-full mt-1 p-2 text-xs font-mono border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>
@@ -533,16 +550,20 @@
               <input 
                 v-model="formUsuario.contacto_emergencia_nombre" 
                 type="text" 
+                maxlength="80"
                 placeholder="Nombre familiar" 
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>
             <div>
-              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Tel. Emergencia</label>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">Tel. Emergencia (10 dígitos)</label>
               <input 
-                v-model="formUsuario.contacto_emergencia_telefono" 
+                :value="formUsuario.contacto_emergencia_telefono" 
+                @input="formUsuario.contacto_emergencia_telefono = $event.target.value.replace(/\D/g, '').slice(0, 10)"
                 type="tel" 
-                placeholder="555-000-0000" 
+                maxlength="10"
+                inputmode="tel"
+                placeholder="Ej. 5512345678" 
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>

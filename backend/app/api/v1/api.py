@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import health, usuarios, mesas, menu, inventario, ordenes, caja
+from app.api.v1.endpoints import health, usuarios, mesas, menu, inventario, ordenes, caja, configuracion
 
 api_router = APIRouter()
 
@@ -10,3 +10,4 @@ api_router.include_router(menu.router, prefix="/menu", tags=["Catálogo de Plati
 api_router.include_router(inventario.router, prefix="/inventario", tags=["Inventario y Materia Prima"])
 api_router.include_router(ordenes.router, prefix="/ordenes", tags=["Comandas y Cancelaciones"])
 api_router.include_router(caja.router, prefix="/caja", tags=["Caja, Cobros y Arqueos"])
+api_router.include_router(configuracion.router, prefix="/configuracion", tags=["Configuración del Sistema"])

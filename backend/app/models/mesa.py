@@ -36,3 +36,13 @@ class Mesa(Base):
     @property
     def mesero_nombre(self):
         return self.mesero.nombre if self.mesero else None
+
+    @property
+    def tiene_consumo(self) -> bool:
+        if not self.ordenes:
+            return False
+        for ord in self.ordenes:
+            if str(ord.estado).lower() not in ["pagado", "cancelada"]:
+                if any(str(it.estado).lower() != "cancelado" for it in ord.items):
+                    return True
+        return False

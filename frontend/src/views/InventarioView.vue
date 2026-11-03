@@ -122,6 +122,7 @@
             <input 
               v-model="formArticulo.nombre" 
               type="text" 
+              maxlength="100"
               placeholder="Ej. Pechuga de pollo, Vaso 12oz, Escoba, Plato" 
               class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
             />
@@ -162,7 +163,10 @@
               <input 
                 v-model.number="formArticulo.stock_actual" 
                 type="number" 
+                min="0"
+                max="999999"
                 step="0.01" 
+                inputmode="decimal"
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>
@@ -171,7 +175,10 @@
               <input 
                 v-model.number="formArticulo.stock_minimo" 
                 type="number" 
+                min="0"
+                max="999999"
                 step="0.01" 
+                inputmode="decimal"
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>
@@ -180,7 +187,10 @@
               <input 
                 v-model.number="formArticulo.costo_unitario" 
                 type="number" 
-                step="0.5" 
+                min="0"
+                max="999999"
+                step="0.50" 
+                inputmode="decimal"
                 class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
               />
             </div>
@@ -240,7 +250,10 @@
             <input 
               v-model.number="formMovimiento.cantidad" 
               type="number" 
+              min="0.01"
+              max="999999"
               step="0.01" 
+              inputmode="decimal"
               placeholder="0.00"
               class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
             />
@@ -251,6 +264,7 @@
             <input 
               v-model="formMovimiento.motivo" 
               type="text" 
+              maxlength="150"
               placeholder="Ej. Factura #402, Merma por caducidad" 
               class="w-full mt-1 p-2.5 text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:border-eden-600"
             />

@@ -57,7 +57,10 @@ backend/uploads/*
 # OS / IDE
 .DS_Store
 Thumbs.db
+*.Zone.Identifier
+*:Zone.Identifier
 .idea/
 .vscode/
 *.swp
 *.swo
+iPad/

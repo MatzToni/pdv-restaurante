@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from typing import List
 from app.db.session import get_db
 from app.models.mesa import Mesa, Area, EstadoMesa
+from app.models.orden import Orden, EstadoOrden, EstadoOrdenItem
 from app.models.usuario import Usuario, RolUsuario
 from app.schemas.mesa import (
     MesaOut,
@@ -33,7 +34,8 @@ def crear_area(area_in: AreaCreate, db: Session = Depends(get_db)):
 def listar_mesas(db: Session = Depends(get_db)):
     return db.query(Mesa).options(
         joinedload(Mesa.mesero),
-        joinedload(Mesa.area)
+        joinedload(Mesa.area),
+        joinedload(Mesa.ordenes).joinedload(Orden.items)
     ).filter(Mesa.activa == True).order_by(Mesa.id).all()
 
 @router.post("/", response_model=MesaOut, status_code=status.HTTP_201_CREATED, summary="Crear una nueva mesa")
@@ -66,6 +68,17 @@ def actualizar_estado_mesa(mesa_id: int, estado_in: MesaUpdateEstado, db: Sessio
     mesa = db.query(Mesa).filter(Mesa.id == mesa_id).first()
     if not mesa:
         raise HTTPException(status_code=404, detail="Mesa no encontrada.")
+    if estado_in.estado == EstadoMesa.CUENTA:
+        # Validar que exista al menos una orden activa con productos no cancelados
+        orden_activa = db.query(Orden).filter(
+            Orden.mesa_id == mesa_id,
+            Orden.estado.in_([EstadoOrden.EN_COLA, EstadoOrden.PREPARANDO, EstadoOrden.LISTO, EstadoOrden.ENTREGADO])
+        ).first()
+        if not orden_activa or not any(i.estado != EstadoOrdenItem.CANCELADO for i in orden_activa.items):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se puede solicitar la cuenta de una mesa sin pedidos o servicios realizados."
+            )
     if estado_in.estado == EstadoMesa.LIBRE:
         mesa.mesero_id = None
     mesa.estado = estado_in.estado
@@ -82,16 +95,18 @@ def asignar_mesero_mesa(mesa_id: int, datos: MesaAsignarMesero, db: Session = De
         mesero = db.query(Usuario).filter(Usuario.id == datos.mesero_id, Usuario.activo == True).first()
         if not mesero:
             raise HTTPException(status_code=404, detail="Colaborador no encontrado o inactivo.")
-        if mesero.rol not in [RolUsuario.MESERO, RolUsuario.AUXILIAR_GENERAL, RolUsuario.ADMINISTRADOR]:
+        if mesero.rol not in [RolUsuario.MESERO, RolUsuario.AUXILIAR_GENERAL, RolUsuario.ADMINISTRADOR, RolUsuario.GERENTE, RolUsuario.JEFE]:
             raise HTTPException(
                 status_code=400,
-                detail="Solo los meseros y auxiliares generales pueden tener asignadas mesas para atender."
+                detail="Solo los meseros, auxiliares y administración pueden tener asignadas mesas para atender."
             )
         mesa.mesero_id = datos.mesero_id
         if mesa.estado == EstadoMesa.LIBRE:
             mesa.estado = EstadoMesa.OCUPADA
     else:
         mesa.mesero_id = None
+        if mesa.estado == EstadoMesa.OCUPADA and not mesa.tiene_consumo:
+            mesa.estado = EstadoMesa.LIBRE
     db.commit()
     db.refresh(mesa)
     return mesa

@@ -1,4 +1,5 @@
 import enum
+from typing import Optional
 from sqlalchemy import Column, Integer, String, Numeric, Boolean, Enum, ForeignKey, DateTime, Text, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -17,6 +18,7 @@ class EstadoOrdenItem(str, enum.Enum):
     PREPARANDO = "preparando"
     EN_OBSERVACION = "en_observacion"
     LISTO = "listo"
+    RECIBIDO_MESERO = "recibido_mesero"
     ENTREGADO = "entregado"
     CANCELADO = "cancelado"
 
@@ -24,9 +26,12 @@ class Orden(Base):
     __tablename__ = "ordenes"
 
     id = Column(Integer, primary_key=True, index=True)
-    mesa_id = Column(Integer, ForeignKey("mesas.id"), nullable=False)
+    mesa_id = Column(Integer, ForeignKey("mesas.id"), nullable=True)
     mesero_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     estado = Column(Enum(EstadoOrden), default=EstadoOrden.EN_COLA, nullable=False)
+    tipo_pedido = Column(String(30), default="comedor", nullable=False) # comedor, para_llevar, domicilio
+    costo_envio = Column(Numeric(10, 2), default=0.0, nullable=False)
+    datos_entrega = Column(JSON, nullable=True) # {"cliente": "...", "telefono": "...", "direccion": "...", "notas": "..."}
     notas = Column(Text, nullable=True)
     subtotal = Column(Numeric(10, 2), default=0.0, nullable=False)
     descuento = Column(Numeric(10, 2), default=0.0, nullable=False)
@@ -41,10 +46,26 @@ class Orden(Base):
 
     @property
     def mesa_numero(self) -> str:
-        return self.mesa.numero if self.mesa else f"Mesa {self.mesa_id}"
+        if self.tipo_pedido == "domicilio":
+            cli = (self.datos_entrega or {}).get("cliente", "")
+            return f"🛵 Envío {f'- {cli}' if cli else f'#{self.id}'}"
+        elif self.tipo_pedido == "para_llevar":
+            cli = (self.datos_entrega or {}).get("cliente", "")
+            return f"🛍️ Mostrador {f'- {cli}' if cli else f'#{self.id}'}"
+        return self.mesa.numero if self.mesa else f"Mesa {self.mesa_id or 'S/M'}"
+
+    @property
+    def mesa_estado(self) -> Optional[str]:
+        if self.mesa and self.mesa.estado:
+            return self.mesa.estado.value if hasattr(self.mesa.estado, "value") else str(self.mesa.estado)
+        return None
 
     @property
     def mesero_nombre(self) -> str:
+        if self.tipo_pedido == "comedor" and self.mesa and self.mesa.mesero:
+            return self.mesa.mesero.nombre
+        if self.tipo_pedido in ["domicilio", "para_llevar"] and not self.mesa_id:
+            return f"{self.mesero.nombre} (Mostrador)" if self.mesero else "Mostrador / Caja"
         return self.mesero.nombre if self.mesero else f"Mesero #{self.mesero_id}"
 
 class OrdenItem(Base):
@@ -59,6 +80,8 @@ class OrdenItem(Base):
     extras = Column(JSON, default=list, nullable=True) # [{"nombre": "Extra queso", "precio": 20.0}]
     observacion_cocina = Column(String(255), nullable=True) # Aclaración o falta de ingrediente desde cocina
     estado = Column(Enum(EstadoOrdenItem), default=EstadoOrdenItem.PENDIENTE, nullable=False)
+    para_llevar = Column(Boolean, default=False, nullable=False) # Si el producto se pide para llevar / empaque desechable
+    cargo_desechable = Column(Numeric(10, 2), default=0.0, nullable=False)
     
     # Manejo de rechazos y cancelaciones
     usuario_cancelo_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)

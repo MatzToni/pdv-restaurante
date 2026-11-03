@@ -2,8 +2,8 @@ import { defineStore } from 'pinia'
 import api from '../api'
 
 export const PERMISOS_POR_ROL = {
-  administrador: ['mesas', 'pos', 'cocina', 'caja', 'inventario', 'usuarios', 'platillos'],
-  gerente: ['mesas', 'pos', 'cocina', 'caja', 'inventario', 'platillos'],
+  administrador: ['mesas', 'pos', 'cocina', 'caja', 'inventario', 'usuarios', 'platillos', 'configuracion'],
+  gerente: ['mesas', 'pos', 'cocina', 'caja', 'inventario', 'platillos', 'configuracion'],
   jefe: ['mesas', 'pos', 'cocina', 'caja'],
   cocina: ['cocina'],
   mesero: ['mesas', 'pos'],

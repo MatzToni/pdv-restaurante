@@ -22,8 +22,8 @@
             <div class="relative">
               <div class="w-16 h-16 rounded-full p-1 bg-white dark:bg-slate-800 border-2 border-white dark:border-white/20 shadow-md ring-2 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <img 
-                  src="/logo.png?v=3" 
-                  alt="Edén Café Logo" 
+                  :src="configStore.logoUrl || '/logo.png'" 
+                  :alt="configStore.nombreRestaurante" 
                   class="w-full h-full object-contain rounded-full"
                 />
               </div>
@@ -58,8 +58,8 @@
             <div class="relative">
               <div class="w-11 h-11 rounded-full p-0.5 bg-white dark:bg-slate-800 border border-white dark:border-white/20 shadow-sm ring-1 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <img 
-                  src="/logo.png?v=3" 
-                  alt="Edén Café Logo" 
+                  :src="configStore.logoUrl || '/logo.png'" 
+                  :alt="configStore.nombreRestaurante" 
                   class="w-full h-full object-contain rounded-full"
                 />
               </div>
@@ -375,8 +375,8 @@
               <div class="relative">
                 <div class="w-16 h-16 rounded-full p-1 bg-white dark:bg-slate-800 border-2 border-white dark:border-white/20 shadow-md ring-2 ring-slate-200/60 dark:ring-white/10 flex items-center justify-center">
                   <img 
-                    src="/logo.png?v=3" 
-                    alt="Edén Café Logo" 
+                    :src="configStore.logoUrl || '/logo.png'" 
+                    :alt="configStore.nombreRestaurante" 
                     class="w-full h-full object-contain rounded-full"
                   />
                 </div>
@@ -500,7 +500,7 @@
       <main 
         class="flex-1 w-full"
         :class="{ 
-          'w-full max-w-[1920px] mx-auto p-3 sm:p-5 md:p-6 lg:p-7': mostrarNavbarPersonal,
+          'w-full max-w-[1920px] mx-auto p-3 sm:p-4 md:p-5 lg:p-7': mostrarNavbarPersonal,
           '': !mostrarNavbarPersonal 
         }"
       >
@@ -516,11 +516,13 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { useThemeStore } from './stores/theme'
+import { useConfiguracionStore } from './stores/configuracion'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
+const configStore = useConfiguracionStore()
 
 // Estado de la barra lateral en Desktop: expandida o compacta
 const sidebarExpandida = ref(true)
@@ -533,7 +535,11 @@ onMounted(() => {
   const guardado = localStorage.getItem('eden_sidebar_expandida')
   if (guardado !== null) {
     sidebarExpandida.value = guardado === 'true'
+  } else if (typeof window !== 'undefined') {
+    // En pantallas de tablet portrait (< 1024px) iniciar compacta por defecto para no restar espacio a las vistas
+    sidebarExpandida.value = window.innerWidth >= 1024
   }
+  configStore.cargarConfiguracion()
 })
 
 // Alternar entre expandido y contraído y persistir preferencia
@@ -563,15 +569,14 @@ const mostrarNavbarPersonal = computed(() => {
   return route.path !== '/login' && route.path !== '/carta'
 })
 
-// Módulos del sistema con sus permisos asociados
+// Módulos del sistema con sus permisos asociados (Comandero se accede exclusivamente desde las mesas/pedidos)
 const todosLosNavItems = [
   { nombre: 'Mesas', nombreRuta: 'mesas', path: '/', icono: '🪑' },
-  { nombre: 'Comandero', nombreRuta: 'pos', path: '/pos', icono: '📝' },
   { nombre: 'Cocina KDS', nombreRuta: 'cocina', path: '/cocina', icono: '👨‍🍳' },
   { nombre: 'Caja', nombreRuta: 'caja', path: '/caja', icono: '💵' },
   { nombre: 'Menú / Platillos', nombreRuta: 'platillos', path: '/platillos', icono: '🍽️' },
   { nombre: 'Inventario', nombreRuta: 'inventario', path: '/inventario', icono: '📦' },
-  { nombre: 'Personal', nombreRuta: 'usuarios', path: '/usuarios', icono: '👥' },
+  { nombre: 'Ajustes del sistema', nombreRuta: 'configuracion', path: '/configuracion', icono: '⚙️' },
 ]
 
 // Filtrar ítems de navegación según el rol del usuario conectado
@@ -581,6 +586,9 @@ const navItemsPermitidos = computed(() => {
 
 // Título de la vista actual para el encabezado móvil
 const tituloVistaActual = computed(() => {
+  if (route.path.startsWith('/pos')) {
+    return 'Comandero'
+  }
   const item = todosLosNavItems.find(i => i.path === route.path)
   return item ? item.nombre : 'Edén Café'
 })

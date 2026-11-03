@@ -4,14 +4,79 @@ from app.db.session import engine, SessionLocal, Base
 from app.models import (
     Usuario, RolUsuario, TurnoTrabajo, TipoDocumentoPersonal, DocumentoPersonal,
     Area, Mesa, EstadoMesa,
-    Categoria, Producto,
+    Categoria, Producto, MenuDelDiaConfig,
     ArticuloInventario, TipoArticulo,
     Receta
 )
 
 def init_db(db: Session) -> None:
+    from sqlalchemy import text
     # 1. Crear todas las tablas en PostgreSQL
     Base.metadata.create_all(bind=engine)
+
+    # Migraciones idempotentes de columnas y tipos añadidos
+    try:
+        with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+            conn.execute(text("ALTER TYPE estadoordenitem ADD VALUE IF NOT EXISTS 'RECIBIDO_MESERO' AFTER 'LISTO';"))
+    except Exception as ex:
+        print(f"Nota en migración de enum: {ex}")
+
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("""
+                ALTER TABLE ordenes ALTER COLUMN mesa_id DROP NOT NULL;
+                ALTER TABLE ordenes ADD COLUMN IF NOT EXISTS tipo_pedido VARCHAR(30) NOT NULL DEFAULT 'comedor';
+                ALTER TABLE ordenes ADD COLUMN IF NOT EXISTS costo_envio NUMERIC(10,2) NOT NULL DEFAULT 0.0;
+                ALTER TABLE ordenes ADD COLUMN IF NOT EXISTS datos_entrega JSONB DEFAULT NULL;
+                ALTER TABLE orden_items ADD COLUMN IF NOT EXISTS para_llevar BOOLEAN NOT NULL DEFAULT FALSE;
+                ALTER TABLE orden_items ADD COLUMN IF NOT EXISTS cargo_desechable NUMERIC(10,2) NOT NULL DEFAULT 0.0;
+                ALTER TABLE configuracion_sistema ADD COLUMN IF NOT EXISTS nota_pie_carta TEXT DEFAULT 'Precios incluyen IVA. Para dudas sobre ingredientes o alérgenos, consulta a tu mesero.';
+                ALTER TABLE configuracion_sistema ADD COLUMN IF NOT EXISTS titulo_carta VARCHAR(150) DEFAULT 'Nuestra Carta';
+                ALTER TABLE configuracion_sistema ADD COLUMN IF NOT EXISTS subtitulo_carta TEXT DEFAULT 'Platillos preparados al momento con ingredientes frescos, recetas mexicanas tradicionales y café tostado artesanal.';
+                ALTER TABLE productos ADD COLUMN IF NOT EXISTS activo BOOLEAN NOT NULL DEFAULT TRUE;
+            """))
+    except Exception as ex:
+        print(f"Nota en migración de columnas: {ex}")
+
+    # Asegurar configuración y producto del Menú del Día
+    try:
+        from decimal import Decimal
+        cfg = db.query(MenuDelDiaConfig).first()
+        if not cfg:
+            cfg = MenuDelDiaConfig(
+                id=1,
+                activo=True,
+                nombre="Menú del Día (Comida Corrida)",
+                descripcion="Comida corrida completa con Entrada, Plato Fuerte con guarnición, Bebida y Postre casero",
+                precio=Decimal("95.00"),
+                hora_inicio="12:00",
+                hora_fin="18:00",
+                entradas=["Sopa de fideo tradicional", "Consomé de pollo con verduras", "Crema del día"],
+                platos_fuertes=["Milanesa de pollo o res empanizada", "Mojarra frita al mojo de ajo", "Albóndigas caseras en chipotle", "Pechuga asada a la plancha"],
+                guarniciones=["Arroz mexicano y frijoles refritos", "Papas a la francesa y ensalada fresca"],
+                bebidas=["Agua fresca de Jamaica", "Agua de Limón con pepino y chía", "Agua de Guayaba"],
+                postres=["Gelatina de mosaico", "Arroz con leche", "Flan napolitano", "Sin postre"]
+            )
+            db.add(cfg)
+            db.commit()
+
+        prod_mdd = db.query(Producto).filter(Producto.tipo_item == "menu_del_dia").first()
+        if not prod_mdd:
+            cat = db.query(Categoria).filter(Categoria.nombre.ilike("%platillo%")).first() or db.query(Categoria).first()
+            if cat:
+                prod_mdd = Producto(
+                    categoria_id=cat.id,
+                    nombre="Menú del Día (Comida Corrida)",
+                    tipo_item="menu_del_dia",
+                    descripcion="Comida corrida completa con Entrada, Plato Fuerte, Guarnición, Bebida y Postre",
+                    precio=Decimal("95.00"),
+                    disponible=True,
+                    requiere_cocina=True
+                )
+                db.add(prod_mdd)
+                db.commit()
+    except Exception as ex:
+        print(f"Nota en inicialización Menú del Día: {ex}")
 
     # Si ya existen usuarios, no re-sembrar
     if db.query(Usuario).first():

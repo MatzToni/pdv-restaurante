@@ -6,12 +6,12 @@
         <!-- Logo y Nombre -->
         <div class="flex items-center gap-3">
           <img 
-            src="/logo.png" 
-            alt="Edén Café Logo" 
+            :src="configStore.logoUrl || '/logo.png'" 
+            :alt="configStore.nombreRestaurante" 
             class="w-10 h-10 object-contain rounded-full shadow-sm"
           />
           <div>
-            <h1 class="font-black text-slate-800 dark:text-slate-100 text-base leading-tight tracking-tight">Edén Café</h1>
+            <h1 class="font-black text-slate-800 dark:text-slate-100 text-base leading-tight tracking-tight">{{ configStore.nombreRestaurante }}</h1>
             <span class="text-2xs text-eden-600 dark:text-eden-400 font-bold uppercase tracking-wider">Menú Digital & Carta</span>
           </div>
         </div>
@@ -34,32 +34,27 @@
           >
             {{ themeStore.tema === 'oscuro' ? '☀️' : '🌙' }}
           </button>
-
-          <!-- Enlace Acceso Personal -->
-          <router-link
-            to="/login"
-            class="hidden sm:inline-flex px-3 py-1.5 bg-eden-600 hover:bg-eden-700 text-white rounded-xl text-xs font-bold transition shadow-sm"
-          >
-            Acceso Personal
-          </router-link>
         </div>
       </div>
     </header>
 
     <!-- Hero / Bienvenida -->
-    <section class="max-w-5xl mx-auto px-4 pt-8 pb-4 text-center space-y-2">
-      <span class="inline-block px-3 py-1 rounded-full bg-eden-100 dark:bg-eden-950/60 text-eden-800 dark:text-eden-300 text-2xs font-black uppercase tracking-widest border border-eden-200 dark:border-eden-800/40">
-        Comida Tradicional y Café de Especialidad
-      </span>
+    <section class="max-w-5xl mx-auto px-4 pt-8 pb-4 text-center space-y-3">
+      <div v-if="configStore.slogan" class="flex items-center justify-center">
+        <span class="inline-block px-3 py-1 rounded-full bg-eden-100 dark:bg-eden-950/60 text-eden-800 dark:text-eden-300 text-2xs font-black uppercase tracking-widest border border-eden-200 dark:border-eden-800/40">
+          {{ configStore.slogan }}
+        </span>
+      </div>
+
       <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-        Nuestra Carta
+        {{ configStore.tituloCarta || 'Nuestra Carta' }}
       </h2>
-      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-        Platillos preparados al momento con ingredientes frescos, recetas mexicanas tradicionales y café tostado artesanal.
+      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto whitespace-pre-line leading-relaxed">
+        {{ configStore.subtituloCarta || 'Platillos preparados al momento con ingredientes frescos, recetas mexicanas tradicionales y café tostado artesanal.' }}
       </p>
 
       <!-- Barra de Búsqueda Interactiva -->
-      <div class="max-w-md mx-auto pt-4">
+      <div class="max-w-md mx-auto pt-3">
         <div class="relative">
           <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
             🔍
@@ -67,6 +62,7 @@
           <input 
             v-model="busqueda"
             type="text"
+            maxlength="80"
             placeholder="Buscar por platillo, café, postre..."
             class="w-full pl-10 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 text-sm font-medium shadow-sm focus:outline-none focus:border-eden-600 dark:focus:border-eden-500 transition"
           />
@@ -106,6 +102,96 @@
 
     <!-- Contenido de Platillos -->
     <main class="max-w-5xl mx-auto px-4 py-6 space-y-8">
+      <!-- Banner Especial Menú del Día de Hoy para Clientes -->
+      <div 
+        v-if="menuStore.menuDelDia?.activo && !busqueda"
+        class="bg-gradient-to-r from-amber-500/10 via-eden-500/10 to-emerald-500/10 dark:from-amber-950/40 dark:via-eden-950/40 dark:to-emerald-950/40 rounded-3xl border border-amber-300 dark:border-amber-700/60 p-6 shadow-sm space-y-4"
+      >
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shadow-sm shrink-0">
+              🍱
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-lg font-black text-slate-800 dark:text-slate-100">
+                  Menú del Día
+                </h3>
+                <span class="text-3xs font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-2xs">
+                  {{ menuStore.menuDelDia.hora_inicio }} - {{ menuStore.menuDelDia.hora_fin }}
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Menú completo tradicional: Entrada, Plato Fuerte, Bebida del día y Postre
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjetas de cada comida corrida -->
+        <div v-if="menuStore.menuDelDia.comidas_corridas?.length" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+          <div 
+            v-for="(cc, i) in menuStore.menuDelDia.comidas_corridas" 
+            :key="cc.id || i"
+            class="p-4 bg-white/90 dark:bg-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-2xs space-y-2 flex flex-col justify-between transition-all"
+            :class="cc.activo === false ? 'opacity-65 grayscale-[25%] border-rose-200 dark:border-rose-900/50 bg-rose-50/10' : ''"
+          >
+            <div>
+              <div class="flex justify-between items-start gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="font-black text-sm text-slate-800 dark:text-slate-100">
+                    🍱 {{ cc.nombre || `Comida Corrida #${i + 1}` }}
+                  </h4>
+                  <span 
+                    v-if="cc.activo === false"
+                    class="text-3xs font-black uppercase px-2 py-0.5 rounded-full bg-rose-600 text-white"
+                  >
+                    Agotada hoy
+                  </span>
+                </div>
+                <span class="text-base font-black text-eden-600 dark:text-eden-400 font-mono shrink-0">
+                  ${{ Number(cc.precio || menuStore.menuDelDia.precio || 95).toFixed(2) }}
+                </span>
+              </div>
+
+              <div class="flex items-start gap-3 mt-2.5">
+                <!-- Foto si existe -->
+                <div 
+                  v-if="cc.imagen_url" 
+                  class="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs"
+                >
+                  <img 
+                    :src="menuStore.obtenerUrlImagen(cc.imagen_url)" 
+                    :alt="cc.nombre" 
+                    class="w-full h-full object-cover" 
+                    @error="$event.target.style.display = 'none'"
+                  />
+                </div>
+
+                <div class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 flex-1 min-w-0">
+                  <div class="flex items-start gap-1">
+                    <span class="font-bold text-amber-700 dark:text-amber-400 shrink-0">🥣 Entrada:</span>
+                    <span>{{ cc.entradas?.join(', ') || 'N/A' }}</span>
+                  </div>
+                  <div class="flex items-start gap-1">
+                    <span class="font-bold text-amber-700 dark:text-amber-400 shrink-0">🍖 Plato Fuerte:</span>
+                    <span>{{ cc.platos_fuertes?.join(', ') || 'N/A' }}</span>
+                  </div>
+                  <div class="flex items-start gap-1">
+                    <span class="font-bold text-amber-700 dark:text-amber-400 shrink-0">🥤 Bebida:</span>
+                    <span>{{ cc.bebidas?.join(', ') || 'N/A' }}</span>
+                  </div>
+                  <div v-if="cc.postres?.length" class="flex items-start gap-1">
+                    <span class="font-bold text-amber-700 dark:text-amber-400 shrink-0">🍮 Postre:</span>
+                    <span>{{ cc.postres.join(', ') }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Spinner de Carga -->
       <div v-if="menuStore.cargando" class="text-center py-20 text-slate-400">
         <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 dark:border-slate-800 border-t-eden-600 mb-2"></div>
@@ -181,21 +267,69 @@
     </main>
 
     <!-- Footer Información Restaurante -->
-    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12 py-8 transition-colors">
-      <div class="max-w-5xl mx-auto px-4 text-center space-y-4">
-        <div class="flex justify-center items-center gap-2">
-          <img src="/logo.png" alt="Edén Café" class="w-8 h-8 rounded-full" />
-          <span class="font-black text-slate-800 dark:text-slate-100 text-sm">Edén Café</span>
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12 py-10 transition-colors">
+      <div class="max-w-4xl mx-auto px-4 text-center space-y-6">
+        <!-- Logo e Identidad del Negocio -->
+        <div class="flex flex-col items-center justify-center space-y-2">
+          <div class="w-14 h-14 rounded-full p-1 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-sm ring-2 ring-eden-500/20 flex items-center justify-center overflow-hidden">
+            <img 
+              :src="configStore.logoUrl || '/logo.png'" 
+              :alt="configStore.nombreRestaurante" 
+              class="w-full h-full object-contain rounded-full" 
+            />
+          </div>
+          <div>
+            <h3 class="font-black text-slate-800 dark:text-slate-100 text-base sm:text-lg tracking-tight">
+              {{ configStore.nombreRestaurante }}
+            </h3>
+            <p v-if="configStore.slogan" class="text-xs text-eden-600 dark:text-eden-400 font-bold">
+              {{ configStore.slogan }}
+            </p>
+          </div>
         </div>
-        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-          Horario de Servicio: Lunes a Domingo de 8:00 AM a 10:00 PM.<br />
-          Precios incluyen IVA. Para dudas sobre ingredientes o alérgenos, consulta a tu mesero.
+
+        <!-- Tarjetas de Información: Horario, Ubicación y Contacto -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto text-xs">
+          <!-- Horario de Atención -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 space-y-1">
+            <span class="text-base block">🕒</span>
+            <span class="font-bold text-slate-700 dark:text-slate-200 block text-3xs uppercase tracking-wider">Horario de Servicio</span>
+            <p class="text-slate-600 dark:text-slate-400 text-2xs leading-tight">
+              {{ configStore.diasServicio }}<br />
+              <strong class="text-slate-800 dark:text-slate-100">{{ configStore.horarioApertura }} - {{ configStore.horarioCierre }}</strong>
+            </p>
+          </div>
+
+          <!-- Ubicación / Dirección -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 space-y-1">
+            <span class="text-base block">📍</span>
+            <span class="font-bold text-slate-700 dark:text-slate-200 block text-3xs uppercase tracking-wider">Ubicación</span>
+            <p class="text-slate-600 dark:text-slate-400 text-2xs leading-tight">
+              {{ configStore.direccion || 'Consulte dirección en sucursal' }}
+            </p>
+          </div>
+
+          <!-- Contacto / Teléfono -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 space-y-1">
+            <span class="text-base block">📞</span>
+            <span class="font-bold text-slate-700 dark:text-slate-200 block text-3xs uppercase tracking-wider">Contacto</span>
+            <p class="text-slate-600 dark:text-slate-400 text-2xs leading-tight">
+              {{ configStore.telefono ? `Tel: ${configStore.telefono}` : 'Atención al comensal' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Leyenda de Impuestos y Precios -->
+        <div class="max-w-md mx-auto pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <p class="text-2xs sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed whitespace-pre-line">
+            {{ configStore.notaPieCarta || 'Precios incluyen IVA. Para dudas sobre ingredientes o alérgenos, consulta a tu mesero.' }}
+          </p>
+        </div>
+
+        <!-- Copyright / Cierre -->
+        <p class="text-3xs text-slate-400 dark:text-slate-500">
+          © {{ new Date().getFullYear() }} {{ configStore.nombreRestaurante }}. Sistema de Punto de Venta & Menú Digital.
         </p>
-        <div class="pt-2">
-          <router-link to="/login" class="text-xs text-eden-600 dark:text-eden-400 font-bold hover:underline">
-            Acceso exclusivo para el personal del restaurante →
-          </router-link>
-        </div>
       </div>
     </footer>
 
@@ -239,16 +373,21 @@
 import { ref, computed, onMounted } from 'vue'
 import { useMenuStore } from '../stores/menu'
 import { useThemeStore } from '../stores/theme'
+import { useConfiguracionStore } from '../stores/configuracion'
 
 const menuStore = useMenuStore()
 const themeStore = useThemeStore()
+const configStore = useConfiguracionStore()
 
 const categoriaActiva = ref(null)
 const busqueda = ref('')
 const modalQR = ref(false)
 
-onMounted(() => {
-  menuStore.cargarCatalogo()
+onMounted(async () => {
+  await Promise.all([
+    menuStore.cargarCatalogo(),
+    configStore.cargarConfiguracion()
+  ])
 })
 
 const urlCartaActual = computed(() => {
